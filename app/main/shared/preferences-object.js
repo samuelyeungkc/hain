@@ -33,7 +33,7 @@ class PreferencesObject extends EventEmitter {
     const defaults = schemaDefaults(this.schema);
     if (this.store) {
       let loadedData = this.store.get(this.id);
-      if (this.encKey)
+      if (loadedData && this.encKey)
         loadedData = jsonSchemaEncoder.decode(loadedData, this.schema, this.encoderOptions);
       this.model = lo_assign({}, defaults, loadedData);
     } else {
