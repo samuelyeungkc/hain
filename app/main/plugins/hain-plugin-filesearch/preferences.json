@@ -24,6 +24,18 @@
         "${SystemRoot}\\System32",
         "${SystemRoot}"
       ]
+    },
+    "searchExtensions": {
+      "type": "array",
+      "title": "File extensions to match (requires restart)",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        ".appref-ms",
+        ".exe",
+        ".lnk"
+      ]
     }
   }
 }

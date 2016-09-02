@@ -36,7 +36,7 @@ function _realpath(filePath) {
   });
 }
 
-function* readdir(dirPath, recursive, matcher) {
+function* readdir(dirPath, extensions, recursive, matcher) {
   const list = [];
   const pendingDirs = [dirPath];
   const scannedDirs = {};
@@ -56,7 +56,7 @@ function* readdir(dirPath, recursive, matcher) {
         const _path = path.join(realdir, file);
         try {
           const stat = yield _stat(_path);
-          if (matcher(_path, stat)) {
+          if (matcher(_path, extensions, stat)) {
             list.push(_path);
           }
           if (stat.isDirectory() && recursive) {
