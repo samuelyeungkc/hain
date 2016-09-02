@@ -12,7 +12,9 @@
 
   const dialog = require('electron').dialog;
   const electronApp = require('electron').app;
-  electronApp.commandLine.appendSwitch('js-flags', '--always-compact');
+  electronApp.commandLine.appendSwitch('js-flags', '--always_compact');
+  electronApp.commandLine.appendSwitch('js-flags', '--gc_glocal');
+  electronApp.commandLine.appendSwitch('js-flags', '--optimize_for_size');
 
   const logger = require('./shared/logger');
   process.on('uncaughtException', (e) => {

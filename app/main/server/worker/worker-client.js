@@ -33,7 +33,7 @@ module.exports = class WorkerClient extends EventEmitter {
       throw new Error('can\'t execute plugin process');
 
     this.workerProcess = cp.fork(workerPath, [], {
-      execArgv: ['--always-compact'],
+      execArgv: ['--optimize_for_size', '--gc_global', '--always_compact'],
       silent: true
     });
 
