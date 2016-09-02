@@ -49,8 +49,8 @@ function patchAgents() {
   if (!proxyPref.useProxy)
     return;
 
-  logger.log('patchAgents:');
-  logger.log(proxyPref);
+  logger.debug('patchAgents:');
+  logger.debug(proxyPref);
 
   const httpAgent = createHttpProxyAgent(proxyPref.host, proxyPref.port);
   const httpsAgent = createHttpsProxyAgent(proxyPref.host, proxyPref.port);

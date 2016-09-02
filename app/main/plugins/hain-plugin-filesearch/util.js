@@ -3,7 +3,7 @@
 const lo_findIndex = require('lodash.findindex');
 const lo_orderBy = require('lodash.orderby');
 const path = require('path');
-const matchutil = require('../../shared/matchutil');
+const matchUtil = require('../../shared/match-util');
 
 const BASENAME_MATCH_WEIGHT = 2.0;
 
@@ -40,19 +40,19 @@ function combineFuzzyResults(combinedTarget, source) {
 }
 
 function fuzzy(items, query) {
-  const resultsByPath = matchutil.fuzzy(items, query).slice(0, 20).map(x => {
+  const resultsByPath = matchUtil.fuzzy(items, query).slice(0, 20).map(x => {
     return {
       path: x.elem,
-      html: matchutil.makeStringBoldHtml(x.elem, x.matches),
+      html: matchUtil.makeStringBoldHtml(x.elem, x.matches),
       score: x.score * computeRatio(x.elem)
     };
   });
-  const resultsByBasename = matchutil.fwdfuzzy(items, query, x => path.basename(x, path.extname(x))).slice(0, 20).map(x => {
+  const resultsByBasename = matchUtil.fwdfuzzy(items, query, x => path.basename(x, path.extname(x))).slice(0, 20).map(x => {
     const allpath = x.elem;
     const extname = path.extname(allpath);
     const basename = path.basename(allpath, extname);
     const containerPath = allpath.substring(0, allpath.length - basename.length - extname.length);
-    const html = matchutil.makeStringBoldHtml(basename, x.matches);
+    const html = matchUtil.makeStringBoldHtml(basename, x.matches);
     return {
       path: allpath,
       html: containerPath + html + extname,

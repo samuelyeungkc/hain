@@ -33,7 +33,7 @@ module.exports = (context) => {
   const toast = context.toast;
   const logger = context.logger;
   const shell = context.shell;
-  const matchutil = context.matchutil;
+  const matchUtil = context.matchUtil;
   const app = context.app;
 
   let isSearching = false;
@@ -118,8 +118,8 @@ module.exports = (context) => {
   function _fuzzy(cmdType, packages, keyword) {
     if (keyword.length <= 0)
       return packages.map(x => _toSearchResult(cmdType, x));
-    return matchutil.fuzzy(packages, keyword.trim(), x => x.name).map(x => {
-      const m = matchutil.makeStringBoldHtml(x.elem.name, x.matches);
+    return matchUtil.fuzzy(packages, keyword.trim(), x => x.name).map(x => {
+      const m = matchUtil.makeStringBoldHtml(x.elem.name, x.matches);
       return _toSearchResult(cmdType, x.elem, m);
     });
   }
@@ -152,7 +152,7 @@ module.exports = (context) => {
       const newestPkgNames = newestPackages.map(x => x.name);
       const popularPackages = lo_reject(packages, x => newestPkgNames.indexOf(x.name) >= 0);
 
-      const popularResults = _toSearchResults('install', popularPackages, 'Popular (Monthly)');
+      const popularResults = _toSearchResults('install', popularPackages, 'Popular');
       const newestResults = _toSearchResults('install', newestPackages, 'Newest');
       return newestResults.concat(popularResults);
     }
@@ -190,12 +190,12 @@ module.exports = (context) => {
   }
 
   function _makeCommandsHelp(query) {
-    const ret = matchutil.head(COMMANDS, `${PREFIX}${query}`).map((x) => {
+    const ret = matchUtil.head(COMMANDS, `${PREFIX}${query}`).map((x) => {
       return {
         id: x.elem,
         payload: 'redirect',
         redirect: x.elem,
-        title: matchutil.makeStringBoldHtml(x.elem, x.matches),
+        title: matchUtil.makeStringBoldHtml(x.elem, x.matches),
         desc: NAME
       };
     });

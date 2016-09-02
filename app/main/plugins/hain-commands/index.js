@@ -9,7 +9,7 @@ const NAME = 'hain-commands';
 
 module.exports = (context) => {
   const app = context.app;
-  const matchutil = context.matchutil;
+  const matchUtil = context.matchUtil;
   const toast = context.toast;
   const shell = context.shell;
 
@@ -107,12 +107,12 @@ module.exports = (context) => {
   }
 
   function _makeCommandsHelp(query) {
-    const ret = matchutil.head(COMMANDS, query).map((x) => {
+    const ret = matchUtil.head(COMMANDS, query).map((x) => {
       return {
         id: 'redirect',
         payload: x.elem,
         redirect: x.elem,
-        title: matchutil.makeStringBoldHtml(x.elem, x.matches),
+        title: matchUtil.makeStringBoldHtml(x.elem, x.matches),
         desc: NAME,
         score: 0
       };

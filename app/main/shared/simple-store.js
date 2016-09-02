@@ -10,20 +10,17 @@ function createStorage(dir) {
   return localStorage;
 }
 
-module.exports = (dir) => {
-  const localStorage = createStorage(dir);
-
-  function get(id) {
-    return localStorage.getItemSync(id);
+module.exports = class SimpleStore {
+  constructor(dir) {
+    this.localStorage = createStorage(dir);
   }
-
-  function set(id, obj) {
-    localStorage.setItemSync(id, obj);
+  get(id) {
+    return this.localStorage.getItemSync(id);
   }
-
-  function has(id) {
-    return (get(id) !== undefined);
+  set(id, obj) {
+    this.localStorage.setItemSync(id, obj);
   }
-
-  return { get, set, has };
+  has(id) {
+    return (this.get(id) !== undefined);
+  }
 };

@@ -1,4 +1,3 @@
-/* global $ */
 'use strict';
 
 const lo_orderBy = require('lodash.orderby');
@@ -12,11 +11,13 @@ const lo_assign = require('lodash.assign');
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-const RPCRenderer = require('./rpc-renderer');
-const rpc = new RPCRenderer('mainwindow');
 const remote = require('electron').remote;
+const ipc = require('electron').ipcRenderer;
 
-const textUtil = require('./text-util');
+const RpcChannel = require('../main/shared/rpc-channel');
+const rpc = RpcChannel.createWithIpcRenderer('#mainWindow', ipc);
+
+const textUtil = require('../main/shared/text-util');
 
 const Ticket = require('./ticket');
 const searchTicket = new Ticket();
@@ -60,7 +61,7 @@ class AppContainer extends React.Component {
       return;
     }
     const contents = this.toastQueue.shift();
-    const message = contents.message;
+    const message = textUtil.sanitize(contents.message);
     const duration = contents.duration || 2000;
     this.setState({ toastMessage: message, toastOpen: true });
     this.autoHideToast(duration);
@@ -75,27 +76,26 @@ class AppContainer extends React.Component {
 
   componentDidMount() {
     this.refs.query.focus();
-    rpc.connect();
-    rpc.on('on-load', (evt, msg) => {
+    rpc.define('notifyPluginsLoaded', (payload) => {
       this.isLoaded = true;
-      this.setQuery('', true);
+      this.setQuery('');
     });
-    rpc.on('on-reloading', (evt, msg) => {
+    rpc.define('notifyPluginsReloading', (payload) => {
       this.isLoaded = false;
       this.forceUpdate();
     });
-    rpc.on('on-toast', (evt, msg) => {
-      const { message, duration } = msg;
+    rpc.define('enqueueToast', (payload) => {
+      const { message, duration } = payload;
       this.toastQueue.push({ message, duration });
     });
-    rpc.on('on-log', (evt, msg) => {
-      console.log(msg);
+    rpc.define('log', (payload) => {
+      console.log(payload);
     });
-    rpc.on('set-query', (evt, args) => {
-      this.setQuery(args);
+    rpc.define('setQuery', (payload) => {
+      this.setQuery(payload);
     });
-    rpc.on('on-result', (evt, msg) => {
-      const { ticket, type, payload } = msg;
+    rpc.define('requestAddResults', (__payload) => {
+      const { ticket, type, payload } = __payload;
       if (searchTicket.current !== ticket)
         return;
 
@@ -131,8 +131,8 @@ class AppContainer extends React.Component {
 
       this.setState({ results, selectionIndex });
     });
-    rpc.on('on-render-preview', (evt, msg) => {
-      const { ticket, html } = msg;
+    rpc.define('requestRenderPreview', (payload) => {
+      const { ticket, html } = payload;
       if (previewTicket.current !== ticket)
         return;
       if (this.state.previewHtml === html)
@@ -176,7 +176,7 @@ class AppContainer extends React.Component {
 
     clearTimeout(this.lastSearchTimer);
     this.lastSearchTimer = setTimeout(() => {
-      rpc.send('search', { ticket, query });
+      rpc.call('search', { ticket, query });
     }, SEND_INTERVAL);
     clearTimeout(this.lastClearTimer);
     this.lastClearTimer = setTimeout(() => {
@@ -215,7 +215,7 @@ class AppContainer extends React.Component {
     this._renderedPreviewHash = previewHash;
 
     const ticket = previewTicket.newTicket();
-    rpc.send('renderPreview', { ticket, pluginId, id, payload });
+    rpc.call('renderPreview', { ticket, pluginId, id, payload });
   }
 
   handleSelection(selectionDelta) {
@@ -343,7 +343,7 @@ class AppContainer extends React.Component {
     const pluginId = result.pluginId;
     const id = result.id;
     const payload = result.payload;
-    rpc.send('buttonAction', { pluginId, id, payload });
+    rpc.call('buttonAction', { pluginId, id, payload });
   }
 
   parseIconUrl(iconUrl) {
@@ -362,14 +362,17 @@ class AppContainer extends React.Component {
     const selectedResult = results[selectionIndex];
 
     const list = [];
+    const tabIndicator = '<kbd style=\'font-size: 7pt; margin-left: 5px; opacity: 0.8\'>tab</kbd>';
     let lastGroup = null;
     for (let i = 0; i < results.length; ++i) {
       const result = results[i];
       const avatar = this.parseIconUrl(result.icon);
       const rightIcon = this.displayRightButton(i);
 
-      const title = textUtil.extractText(result.title);
+      let title = textUtil.extractText(result.title);
       const titleStyle = textUtil.extractTextStyle(result.title);
+      if (result.redirect)
+        title += tabIndicator;
 
       const desc = textUtil.extractText(result.desc);
       const descStyle = textUtil.extractTextStyle(result.desc, { fontSize: 13 });
@@ -464,7 +467,7 @@ class AppContainer extends React.Component {
           </div>
           {previewBox}
         </div>
-        <Notification key="notification" isActive={this.state.toastOpen}
+        <Notification key="notification" isActive={this.state.toastOpen} barStyle={{ maxWidth: '600px', wordWrap: 'break-word' }}
                       message={<div dangerouslySetInnerHTML={{ __html: this.state.toastMessage }} />} />
       </div>
       </MuiThemeProvider>

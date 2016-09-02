@@ -10,24 +10,21 @@
     process.chdir(path.dirname(process.execPath));
   }
 
-  const co = require('co');
   const dialog = require('electron').dialog;
   const electronApp = require('electron').app;
   electronApp.commandLine.appendSwitch('js-flags', '--always-compact');
 
   const logger = require('./shared/logger');
-  process.on('uncaughtException', (err) => {
-    logger.log(err);
-    dialog.showErrorBox('Hain', `Unhandled Error: ${err.stack || err}`);
+  process.on('uncaughtException', (e) => {
+    logger.debug(e);
+    dialog.showErrorBox('Hain', `Unhandled Error: ${e.stack || e}`);
   });
 
-  co(function* () {
-    const app = require('./server/app/app');
-    app.launch();
-    require('./server/server').initialize(app);
-    require('./server/rpc-server').startProcessingQueue();
-  }).catch((err) => {
-    dialog.showErrorBox('Hain', `Unhandled Error: ${err.stack || err}`);
-    electronApp.quit();
-  });
+  const Server = require('./server');
+  const server = new Server();
+  server.launch()
+    .catch((e) => {
+      dialog.showErrorBox('Hain', `Unhandled Error: ${e.stack || e}`);
+      electronApp.quit();
+    });
 })());

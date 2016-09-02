@@ -7,7 +7,10 @@ const lo_has = require('lodash.has');
 
 const math = require('mathjs');
 
-module.exports = ({ app }) => {
+module.exports = (context) => {
+  const app = context.app;
+  const clipboard = context.clipboard;
+  const toast = context.toast;
 
   function search(query, res) {
     try {
@@ -24,7 +27,9 @@ module.exports = ({ app }) => {
   }
 
   function execute(id, payload) {
-    app.setInput(`=${payload}`);
+    app.setQuery(`=${payload}`);
+    clipboard.writeText(payload);
+    toast.enqueue(`${payload} has copied into clipboard`);
   }
 
   return { search, execute };

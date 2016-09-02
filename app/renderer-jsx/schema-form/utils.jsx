@@ -3,12 +3,12 @@
 import React from 'react'; // DO NOT REMOVE THIS LINE, JSX USES THIS LIBRARY
 
 const lo_isString = require('lodash.isstring');
-const textutil = require('../../main/shared/textutil');
+const textUtil = require('../../main/shared/text-util');
 
 function wrapDescription(description) {
   if (description === undefined)
     return undefined;
-  return (<p style={{ color: '#999' }} dangerouslySetInnerHTML={{ __html: textutil.sanitize(description) }}/>);
+  return (<p style={{ color: '#999' }} dangerouslySetInnerHTML={{ __html: textUtil.sanitize(description) }}/>);
 }
 
 function findErrorMessage(errors, path) {

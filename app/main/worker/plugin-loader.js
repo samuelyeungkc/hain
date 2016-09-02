@@ -10,7 +10,7 @@ const logger = require('../shared/logger');
 const iconFmt = require('./icon-fmt');
 const conf = require('../conf');
 
-module.exports = (workerContext) => {
+module.exports = () => {
   function ensurePluginRepos() {
     for (const repo of conf.PLUGIN_REPOS) {
       fse.ensureDirSync(repo);
@@ -26,7 +26,7 @@ module.exports = (workerContext) => {
         const _files = fs.readdirSync(repo);
         files = files.concat(_files.map((x) => path.join(repo, x)));
       } catch (e) {
-        logger.log(e);
+        logger.error(e);
       }
     }
     return files;
@@ -37,12 +37,12 @@ module.exports = (workerContext) => {
     try {
       PluginModule = require(`${pluginFile}`);
     } catch (e) {
-      logger.log(`error on loading: ${pluginFile}`);
-      logger.log(e.stack);
+      logger.error(`error on loading: ${pluginFile}`);
+      logger.error(e.stack);
     }
 
     if (!lo_isFunction(PluginModule)) {
-      logger.log(`plugin not function: ${pluginFile}`);
+      logger.error(`plugin not function: ${pluginFile}`);
       return null;
     }
     return PluginModule;
@@ -70,7 +70,7 @@ module.exports = (workerContext) => {
       pluginConfig.name = packageJson.name;
       pluginConfig.version = packageJson.version;
     } catch (e) {
-      logger.log(`${pluginId} package.json error`);
+      logger.error(`${pluginId} package.json error`);
       return null;
     }
     return pluginConfig;
@@ -83,7 +83,7 @@ module.exports = (workerContext) => {
     const pluginConfigs = {};
     for (const pluginFile of pluginFiles) {
       if (plugins[pluginFile] !== undefined) {
-        logger.log(`conflict: ${pluginFile} is already loaded`);
+        logger.error(`conflict: ${pluginFile} is already loaded`);
         continue;
       }
 
@@ -102,10 +102,9 @@ module.exports = (workerContext) => {
         pluginInstance.__pluginContext = pluginContext;
         plugins[pluginId] = pluginInstance;
         pluginConfigs[pluginId] = pluginConfig;
-        logger.log(`${pluginId} loaded`);
+        logger.debug(`${pluginId} loaded`);
       } catch (e) {
-        const err = e.stack || e;
-        logger.log(`${pluginId} could'nt be created: ${err}`);
+        logger.error(`${pluginId} could'nt be created: ${e.stack || e}`);
       }
     }
     return { plugins, pluginConfigs };
