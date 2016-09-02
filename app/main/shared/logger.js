@@ -18,10 +18,4 @@ const logger = new (winston.Logger)({
   ]
 });
 
-function log(msg) {
-  try {
-    logger.debug(msg);
-  } catch (e) {}
-}
-
-module.exports = { log };
+module.exports = logger;

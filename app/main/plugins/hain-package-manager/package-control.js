@@ -6,7 +6,7 @@ const co = require('co');
 const got = require('got');
 const semver = require('semver');
 const path = require('path');
-const fileutil = require('../../shared/fileutil');
+const fileUtil = require('../../shared/file-util');
 
 const REGISTRY_URL = 'https://registry.npmjs.org';
 
@@ -81,32 +81,32 @@ function* downloadAndExtractPackage(packageName, versionRange, destDir, tempDir)
   const tempPackageDir = path.join(tempDir, 'package');
 
   yield downloadFile(distUrl, downloadPath);
-  yield fileutil.extractTarball(downloadPath, tempDir);
-  yield fileutil.move(tempPackageDir, destDir);
+  yield fileUtil.extractTarball(downloadPath, tempDir);
+  yield fileUtil.move(tempPackageDir, destDir);
 
-  yield fileutil.remove(downloadPath);
+  yield fileUtil.remove(downloadPath);
 }
 
 function* installPackage(packageName, versionRange, destDir, tempDir) {
   const data = yield* resolvePackageData(packageName, versionRange);
   const incompleteDir = path.join(tempDir, '__incomplete__');
 
-  yield fileutil.ensureDir(tempDir);
-  yield fileutil.ensureDir(incompleteDir);
+  yield fileUtil.ensureDir(tempDir);
+  yield fileUtil.ensureDir(incompleteDir);
 
   try {
     yield* downloadAndExtractPackage(packageName, versionRange, incompleteDir, tempDir);
 
     if (data.dependencies && (lo_size(data.dependencies) > 0)) {
       const modulePath = path.join(incompleteDir, 'node_modules');
-      yield fileutil.ensureDir(modulePath);
+      yield fileUtil.ensureDir(modulePath);
 
       const gens = [];
       for (const depName in data.dependencies) {
         const depVersion = data.dependencies[depName];
         const depDir = path.join(modulePath, depName);
         const _tempDir = path.join(tempDir, depName);
-        yield fileutil.ensureDir(_tempDir);
+        yield fileUtil.ensureDir(_tempDir);
         gens.push(co(installPackage(depName, depVersion, depDir, _tempDir)));
       }
       yield gens;
@@ -115,8 +115,8 @@ function* installPackage(packageName, versionRange, destDir, tempDir) {
     console.log(e);
   }
 
-  yield fileutil.move(incompleteDir, destDir);
-  yield fileutil.remove(tempDir);
+  yield fileUtil.move(incompleteDir, destDir);
+  yield fileUtil.remove(tempDir);
   return data;
 }
 

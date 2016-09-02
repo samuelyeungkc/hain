@@ -1,13 +1,12 @@
 {
   "name": "hain",
-  "main": "app/main/main.js",
+  "main": "app/main/bootstrap.js",
   "scripts": {
     "start": "electron .",
     "dev": "gulp && electron .",
     "build": "gulp build-all",
     "test": "cd app && jest",
-    "testwatch": "cd app && jest --watch",
-    "postinstall": "npm install -g electron-prebuilt@0.37.2"
+    "tdd": "cd app && jest --watch"
   },
   "author": "Heejin Lee <monster@teamappetizer.com>",
   "license": "MIT",
@@ -19,7 +18,7 @@
     "babel-preset-react": "^6.5.0",
     "del": "^2.2.0",
     "electron-packager": "^5.2.1",
-    "electron-prebuilt": "0.37.2",
+    "electron-prebuilt": "1.3.4",
     "electron-winstaller": "^2.0.5",
     "eslint": "^2.13.1",
     "eslint-config-airbnb-base": "^3.0.1",

@@ -6,7 +6,7 @@ const lo_remove = require('lodash.remove');
 const co = require('co');
 const path = require('path');
 const packageControl = require('./package-control');
-const fileutil = require('../../shared/fileutil');
+const fileUtil = require('../../shared/file-util');
 const fs = require('fs');
 
 const util = require('./util');
@@ -40,12 +40,12 @@ class Packman {
     const self = this;
     co(function* () {
       self.packages = [];
-      yield fileutil.ensureDir(self.repoDir);
-      const packageDirs = yield fileutil.readdir(self.repoDir);
+      yield fileUtil.ensureDir(self.repoDir);
+      const packageDirs = yield fileUtil.readdir(self.repoDir);
       for (const _packageDir of packageDirs) {
         const packageJsonFile = path.join(self.repoDir, _packageDir, 'package.json');
         try {
-          const fileContents = yield fileutil.readFile(packageJsonFile);
+          const fileContents = yield fileUtil.readFile(packageJsonFile);
           const pkgJson = JSON.parse(fileContents.toString());
           const pkgInfo = _createPackageInfo(_packageDir, pkgJson);
           self.packages.push(pkgInfo);
@@ -56,11 +56,11 @@ class Packman {
       }
 
       self.internalPackages = [];
-      const internalPackageDirs = yield fileutil.readdir(self.internalRepoDir);
+      const internalPackageDirs = yield fileUtil.readdir(self.internalRepoDir);
       for (const _packageDir of internalPackageDirs) {
         const packageJsonFile = path.join(self.internalRepoDir, _packageDir, 'package.json');
         try {
-          const fileContents = yield fileutil.readFile(packageJsonFile);
+          const fileContents = yield fileUtil.readFile(packageJsonFile);
           const pkgJson = JSON.parse(fileContents.toString());
           const pkgInfo = _createPackageInfo(_packageDir, pkgJson, true);
           self.internalPackages.push(pkgInfo);

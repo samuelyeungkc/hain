@@ -1,9 +1,9 @@
 'use strict';
 
 const lo_isString = require('lodash.isstring');
-const textUtil = require('../textutil');
+const textUtil = require('../text-util');
 
-describe('textutil.js', () => {
+describe('text-util.js', () => {
   describe('sanitize', () => {
     it('shouldn\'t edit properties of textObject excluding `text`', () => {
       const txtObj = {

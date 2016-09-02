@@ -15,8 +15,9 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
 const SelectableList = SelectableContainerEnhance(List);
 
-const RPCRenderer = require('./rpc-renderer');
-const rpc = new RPCRenderer('prefwindow');
+const ipc = require('electron').ipcRenderer;
+const RpcChannel = require('../main/shared/rpc-channel');
+const rpc = RpcChannel.createWithIpcRenderer('#prefWindow', ipc);
 
 class Preferences extends React.Component {
   constructor() {
@@ -30,71 +31,66 @@ class Preferences extends React.Component {
     };
     this.commitTimers = {};
   }
-
   onModelChange(newModel) {
     // Do not commit if nothing changed
     if (lo_isEqual(newModel, this.state.modelCopy))
       return;
     this.commitChanges(this.state.selectedPrefId, lo_cloneDeep(newModel));
   }
-
   commitChanges(prefId, model) {
     const timer = this.commitTimers[prefId];
     clearTimeout(timer);
     this.commitTimers[prefId] = setTimeout(() => {
-      rpc.send('updatePreferences', {
-        prefId, model
-      });
+      rpc.call('updatePreferences', { prefId, model });
       this.setState({
         model,
         modelCopy: lo_cloneDeep(model)
       });
     }, 150);
   }
-
   componentDidMount() {
-    rpc.connect();
-    rpc.on('on-get-pref-items', (evt, msg) => {
-      const prefItems = msg;
-      this.setState({ prefItems });
-
-      if (prefItems.length <= 0)
-        return;
-
-      let activeIndex = 0;
-      // Parse location.hash first
-      if (location.hash.length > 0) {
-        const selectedPrefId = location.hash.substring(1);
-        activeIndex = lo_findIndex(prefItems, x => x.id === selectedPrefId);
-        if (activeIndex < 0)
-          activeIndex = 0;
-      }
-      this.selectPref(prefItems[activeIndex].id);
-    });
-    rpc.on('on-get-preferences', (evt, msg) => {
-      this.setState({
-        selectedPrefId: msg.prefId,
-        schema: JSON.parse(msg.schema),
-        model: msg.model,
-        modelCopy: lo_cloneDeep(msg.model)
-      });
-    });
-    rpc.send('getPrefItems');
+    this.refreshAllPreferences();
     document.getElementById('spinner').remove();
   }
+  refreshAllPreferences() {
+    rpc.call('getPrefItems')
+      .then((prefItems) => {
+        this.setState({ prefItems });
 
-  selectPref(prefId) {
-    rpc.send('getPreferences', prefId);
+        if (prefItems.length <= 0)
+          return;
+
+        let activeIndex = 0;
+        // Parse location.hash first
+        if (location.hash.length > 0) {
+          const selectedPrefId = location.hash.substring(1);
+          activeIndex = lo_findIndex(prefItems, x => x.id === selectedPrefId);
+          if (activeIndex < 0)
+            activeIndex = 0;
+        }
+        this.selectPref(prefItems[activeIndex].id);
+      });
   }
-
+  selectPref(prefId) {
+    rpc.call('getPreferences', { prefId })
+      .then((result) => {
+        const { schema, model } = result;
+        this.setState({
+          selectedPrefId: prefId,
+          schema: JSON.parse(schema),
+          model: model,
+          modelCopy: lo_cloneDeep(model)
+        });
+      });
+  }
   handleUpdateSelection(evt, value) {
     this.selectPref(value);
   }
-
   handleResetAll(evt) {
-    rpc.send('resetPreferences', this.state.selectedPrefId);
+    const prefId = this.state.selectedPrefId;
+    rpc.call('resetPreferences', { prefId })
+      .then(() => this.selectPref(prefId));
   }
-
   render() {
     const listItems = [];
     const selectedPrefId = this.state.selectedPrefId;

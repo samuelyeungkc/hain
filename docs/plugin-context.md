@@ -11,11 +11,12 @@ PluginContext is a object which has following properties:
 * `CURRENT_API_VERSION` String
 * `COMPATIBLE_API_VERSIONS` Array&lt;String&gt;
 
-**Utility Objects:**
+**Plugin API:**
 * `app` [App](plugin-context-app.md) - Provides functions to control the app
-* `toast` [Toast](plugin-context-toast.md) - Provides toast functionality
-* `shell` [Shell](plugin-context-shell.md) - Provides electron's shell commands
-* `logger` [Logger](plugin-context-logger.md) - Provides logging functionality
+* `clipboard` [Clipboard](plugin-context-clipboard.md) - Provides electron's clipboard API
+* `toast` [Toast](plugin-context-toast.md) - Provides toast API
+* `shell` [Shell](plugin-context-shell.md) - Provides electron's shell API
+* `logger` [Logger](plugin-context-logger.md) - Provides logging API
 * `localStorage` [node-persist Object](https://github.com/simonlast/node-persist) - Provides a storage for each plugins
 
 **Preference Objects:**
@@ -52,6 +53,7 @@ module.exports = (pluginContext) => {
 
 ## Related Docs
 * [App](plugin-context-app.md)
+* [Clipboard](plugin-context-clipboard.md)
 * [Toast](plugin-context-toast.md)
 * [Shell](plugin-context-shell.md)
 * [Logger](plugin-context-logger.md)

@@ -2,7 +2,7 @@
   "name": "hain",
   "version": "0.5.0",
   "description": "An `alt+space` launcher for Windows, built with Electron",
-  "main": "main/main.js",
+  "main": "main/bootstrap.js",
   "author": "Heejin Lee <monster@teamappetizer.com>",
   "license": "MIT",
   "jest": {
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "application-config-path": "^0.1.0",
+    "auto-launch": "4.0.0",
     "co": "^4.6.0",
     "electron-squirrel-startup": "^1.0.0",
     "fs-extra": "^0.26.5",
@@ -47,7 +48,7 @@
     "node-persist": "0.0.10",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
-    "react-notification": "^4.2.0",
+    "react-notification": "6.1.0",
     "react-tap-event-plugin": "^0.2.2",
     "sanitize-html": "^1.11.3",
     "semver": "^5.1.0",
@@ -55,7 +56,7 @@
     "tarball-extract": "0.0.3",
     "tunnel": "0.0.4",
     "twitter-text": "^1.13.4",
-    "winreg": "^1.0.1",
+    "uuid": "2.0.2",
     "winston": "^2.2.0"
   }
 }

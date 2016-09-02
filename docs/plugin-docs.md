@@ -1,9 +1,8 @@
-# Plugin Documentation (working)
+# Plugin Documentation
 
-Current API Version: `hain-0.4.0`
+Current API Version: `hain-0.5.0`
 
-## Examples
-
+## Plugins on Github
 - `hain0`
   * [hain-plugin-trending](https://github.com/appetizermonster/hain-plugin-trending)
   * [hain-plugin-youtube](https://github.com/appetizermonster/hain-plugin-youtube)
@@ -37,28 +36,29 @@ Current API Version: `hain-0.4.0`
 - `hain-0.3.0`
   * [hain-plugin-material-colors](https://github.com/aouerfelli/hain-plugin-material-colors)
 - `hain-0.4.0`
-  * not yet
+  * [hain-plugin-wolfram-alpha](https://github.com/ycanastra/hain-plugin-wolfram-alpha)
 
-## Guides
+## Workflow Guides
 
 * [Plugin Directories](plugin-directories.md)
 * [Share your plugins](share-your-plugins.md)
 
-## API Reference
+## API Guides
 
 * [Plugin Skeleton (How to define a plugin module)](plugin-skeleton.md)
 * [package.json Format](package-json-format.md)
 * [preferences.json Format](preferences-json-format.md)
+* [Icon URL Format](icon-url-format.md)
+* [Text Format](text-format.md)
+
+## API Reference
+
 * [PluginContext](plugin-context.md)
   - [App](plugin-context-app.md)
+  - [Clipboard](plugin-context-clipboard.md)
   - [Toast](plugin-context-toast.md)
   - [Shell](plugin-context-shell.md)
   - [Logger](plugin-context-logger.md)
 * [SearchResult](search-result.md)
 * [Response (res)](response.md)
 * [PreferencesObject](preferences-object.md)
-* [Icon URL Format](icon-url-format.md)
-* [Text Format](text-format.md)
-
-## Known Issues
-- You should avoid using `console.log` in your plugin or the plugin process will break. Instead, you should use `PluginContext.Logger`. (for unknown reason)

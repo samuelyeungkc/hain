@@ -13,14 +13,14 @@ const co = require('co');
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
-const fileutil = require('../shared/fileutil');
+const fileUtil = require('../shared/file-util');
 
-const matchutil = require('../shared/matchutil');
-const textutil = require('../shared/textutil');
+const matchUtil = require('../shared/match-util');
+const textUtil = require('../shared/text-util');
+const logger = require('../shared/logger');
 const iconFmt = require('./icon-fmt');
 const prefStore = require('./pref-store');
 const storages = require('./storages');
-const nonce = require('../shared/nonce');
 const PreferencesObject = require('../shared/preferences-object');
 
 const conf = require('../conf');
@@ -34,8 +34,8 @@ function createSanitizeSearchResultFunc(pluginId, pluginConfig) {
     _score = Math.max(0, Math.min(_score, 1)); // clamp01(x.score)
 
     const _icon = x.icon ? iconFmt.parse(pluginConfig.path, x.icon) : null;
-    const _title = textutil.sanitize(x.title);
-    const _desc = textutil.sanitize(x.desc);
+    const _title = textUtil.sanitize(x.title);
+    const _desc = textUtil.sanitize(x.desc);
     const _group = x.group;
     const _preview = x.preview;
     const sanitizedProps = {
@@ -84,8 +84,8 @@ function _makeIntroHelp(pluginConfig) {
   return [{
     redirect: pluginConfig.redirect,
     payload: pluginConfig.redirect,
-    title: textutil.sanitize(usage),
-    desc: textutil.sanitize(pluginConfig.name),
+    title: textUtil.sanitize(usage),
+    desc: textUtil.sanitize(pluginConfig.name),
     icon: pluginConfig.icon,
     group: 'Plugins',
     score: Math.random()
@@ -95,13 +95,13 @@ function _makeIntroHelp(pluginConfig) {
 function _makePrefixHelp(pluginConfig, query) {
   if (!pluginConfig.prefix) return;
   const candidates = [pluginConfig.prefix];
-  const filtered = matchutil.head(candidates, query);
+  const filtered = matchUtil.head(candidates, query);
   return filtered.map((x) => {
     return {
       redirect: pluginConfig.redirect,
       payload: pluginConfig.redirect,
-      title: textutil.sanitize(matchutil.makeStringBoldHtml(x.elem, x.matches)),
-      desc: textutil.sanitize(pluginConfig.name),
+      title: textUtil.sanitize(matchUtil.makeStringBoldHtml(x.elem, x.matches)),
+      desc: textUtil.sanitize(pluginConfig.name),
       group: 'Plugin Commands',
       icon: pluginConfig.icon,
       score: 0.5
@@ -110,8 +110,7 @@ function _makePrefixHelp(pluginConfig, query) {
 }
 
 module.exports = (workerContext) => {
-  const pluginLoader = require('./plugin-loader')(workerContext);
-  const logger = workerContext.logger;
+  const pluginLoader = require('./plugin-loader')();
 
   let plugins = null;
   let pluginConfigs = null;
@@ -130,12 +129,15 @@ module.exports = (workerContext) => {
     COMPATIBLE_API_VERSIONS: conf.COMPATIBLE_API_VERSIONS,
     // Utilities
     app: workerContext.app,
+    clipboard: workerContext.clipboard,
     toast: workerContext.toast,
     shell: workerContext.shell,
     logger: workerContext.logger,
-    matchutil,
+    matchUtil,
     // Preferences
-    globalPreferences: workerContext.globalPreferences
+    globalPreferences: workerContext.globalPreferences,
+    // Deprecated
+    matchutil: matchUtil
   };
 
   function generatePluginContext(pluginId, pluginConfig) {
@@ -144,30 +146,28 @@ module.exports = (workerContext) => {
 
     const hasPreferences = (pluginConfig.prefSchema !== null);
     if (hasPreferences) {
-      preferences = new PreferencesObject(prefStore, pluginId, pluginConfig.prefSchema, nonce);
+      preferences = new PreferencesObject(prefStore, pluginId, pluginConfig.prefSchema);
       prefObjs[pluginId] = preferences;
     }
     return lo_assign({}, pluginContextBase, { localStorage, preferences });
   }
 
   function _startup() {
-    logger.log('startup: begin');
+    logger.debug('startup: begin');
     for (const prop in plugins) {
-      logger.log(`startup: ${prop}`);
+      logger.debug(`startup: ${prop}`);
       const startupFunc = plugins[prop].startup;
       if (!lo_isFunction(startupFunc)) {
-        logger.log(`${prop}: startup property should be a Function`);
+        logger.debug(`${prop}: startup property should be a Function`);
         continue;
       }
       try {
         startupFunc();
       } catch (e) {
-        logger.log(e);
-        if (e.stack)
-          logger.log(e.stack);
+        logger.error(e.stack || e);
       }
     }
-    logger.log('startup: end');
+    logger.debug('startup: end');
   }
 
   function removeUninstalledPlugins(listFile, removeData) {
@@ -189,11 +189,11 @@ module.exports = (workerContext) => {
           fse.removeSync(prefFile);
         }
 
-        logger.log(`${packageName} has uninstalled successfully`);
+        logger.debug(`${packageName} has uninstalled successfully`);
       }
       fse.removeSync(listFile);
     } catch (e) {
-      logger.log(`plugin uninstall error: ${e.stack || e}`);
+      logger.error(`plugin uninstall error: ${e.stack || e}`);
     }
   }
 
@@ -208,11 +208,11 @@ module.exports = (workerContext) => {
       for (const packageName of packageDirs) {
         const srcPath = path.join(preinstallDir, packageName);
         const destPath = path.join(repoDir, packageName);
-        yield fileutil.move(srcPath, destPath);
-        logger.log(`${packageName} has installed successfully`);
+        yield fileUtil.move(srcPath, destPath);
+        logger.debug(`${packageName} has installed successfully`);
       }
     }).catch((err) => {
-      logger.log(`plugin uninstall error: ${err.stack || err}`);
+      logger.error(`plugin uninstall error: ${err.stack || err}`);
     });
   }
 
@@ -263,7 +263,7 @@ module.exports = (workerContext) => {
       try {
         plugin.search(_query, pluginResponse);
       } catch (e) {
-        logger.log(e.stack || e);
+        logger.error(e.stack || e);
       }
     }
 
@@ -278,13 +278,14 @@ module.exports = (workerContext) => {
         workerContext.app.setQuery(payload);
       return;
     }
+
     const executeFunc = plugins[pluginId].execute;
     if (executeFunc === undefined)
       return;
     try {
       executeFunc(id, payload);
     } catch (e) {
-      logger.log(e.stack || e);
+      logger.error(e.stack || e);
     }
   }
 
@@ -297,7 +298,7 @@ module.exports = (workerContext) => {
     try {
       renderPreviewFunc(id, payload, render);
     } catch (e) {
-      logger.log(e.stack || e);
+      logger.error(e.stack || e);
     }
   }
 
@@ -310,7 +311,7 @@ module.exports = (workerContext) => {
     try {
       buttonActionFunc(id, payload);
     } catch (e) {
-      logger.log(e.stack || e);
+      logger.error(e.stack || e);
     }
   }
 
@@ -320,11 +321,7 @@ module.exports = (workerContext) => {
 
   function getPreferences(prefId) {
     const prefObj = prefObjs[prefId];
-    return {
-      prefId,
-      schema: JSON.stringify(prefObj.schema),
-      model: prefObj.get()
-    };
+    return prefObj.toPrefFormat();
   }
 
   function updatePreferences(prefId, prefModel) {
