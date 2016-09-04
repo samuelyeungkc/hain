@@ -31,7 +31,7 @@ Run and press `alt+space` anywhere
 
 ## How to make Plugins
 
-See [Plugin Documentation](docs/plugin-docs.md)
+See [Plugin Documentation](http://appetizermonster.github.io/hain/docs/)
 
 ## Install/Build from Source
 

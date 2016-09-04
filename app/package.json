@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "application-config-path": "^0.1.0",
-    "auto-launch": "4.0.0",
     "co": "^4.6.0",
     "electron-squirrel-startup": "^1.0.0",
     "fs-extra": "^0.26.5",
@@ -57,6 +56,7 @@
     "tunnel": "0.0.4",
     "twitter-text": "^1.13.4",
     "uuid": "2.0.2",
+    "winreg": "1.2.2",
     "winston": "^2.2.0"
   }
 }
