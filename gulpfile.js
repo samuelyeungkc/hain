@@ -112,3 +112,12 @@ gulp.task('watch', ['renderer'], () => {
 });
 
 gulp.task('default', ['renderer']);
+
+
+const childProcess  = require('child_process'); 
+const electron      = require('electron-prebuilt');
+
+// create the gulp task
+gulp.task('run', function () { 
+  childProcess.spawn(electron, ['--debug=5858','./app'], { stdio: 'inherit' }); 
+});
