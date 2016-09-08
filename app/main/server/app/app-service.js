@@ -14,13 +14,13 @@ const TrayService = require('./ui/tray-service');
 const firstLaunch = require('./first-launch');
 const ShortcutService = require('./shortcut-service');
 const iconProtocol = require('./icon-protocol');
+const logger = require('../../shared/logger');
 
-const AutoLaunch = require('auto-launch');
-const autoLauncher = new AutoLaunch({
+const AutoLauncher = require('./auto-launcher');
+const autoLauncher = new AutoLauncher({
   name: 'Hain',
   path: `"${process.execPath}" --silent`
 });
-
 
 module.exports = class AppService {
   constructor(prefManager, workerClient, workerProxy) {
@@ -59,13 +59,16 @@ module.exports = class AppService {
             self.mainWindow.show();
           if (isRestarted)
             self.mainWindow.enqueueToast('Restarted');
-        });
+
+          // Open the devtools.
+          self.mainWindow.browserWindow.openDevTools();
+         });
 
         self.trayService.createTray();
         iconProtocol.register();
       });
     }).catch((err) => {
-      console.log(err);
+      logger.error(err);
     });
   }
   open(query) {
