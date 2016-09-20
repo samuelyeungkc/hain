@@ -170,7 +170,7 @@ module.exports = (context) => {
       });
       if (packages.length <= 0) {
         return {
-          title: 'Everthing is up-to-date',
+          title: 'Everything is up-to-date',
           desc: NAME
         };
       }
