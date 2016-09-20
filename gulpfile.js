@@ -111,4 +111,4 @@ gulp.task('watch', ['renderer'], () => {
   gulp.watch('./app/renderer-jsx/**/*', opts, ['renderer']);
 });
 
-gulp.task('default', ['renderer']);:console.warn();
+gulp.task('default', ['renderer']);
