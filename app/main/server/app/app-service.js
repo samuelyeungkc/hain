@@ -59,7 +59,7 @@ module.exports = class AppService {
             self.mainWindow.show();
           if (isRestarted)
             self.mainWindow.enqueueToast('Restarted');
-         });
+        });
 
         self.trayService.createTray();
         iconProtocol.register();
