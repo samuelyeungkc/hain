@@ -11,7 +11,7 @@ describe('util.js', () => {
         'C:\\test\\Internet Explorer\\sysi.exe',
         'C:\\test\\cmd.exe'
       ];
-      const results = util.fuzzy(files, 'iex');
+      const results = util.fuzzy(files, 'iex', ['.exe', '.lnk', '.appref-ms']);
       expect(results[0].path).toEqual(files[0]);
     });
 
