@@ -159,7 +159,7 @@ class AppContainer extends React.Component {
   setSelectionIndex(selId) {
     const _selId = selId || 0;
     this.setState({ selectionIndex: _selId });
-	this.scrollTo(_selId);
+    this.scrollTo(_selId);
   }
 
   scrollTo(selectionIndex) {
