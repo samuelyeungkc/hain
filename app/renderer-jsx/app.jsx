@@ -94,7 +94,7 @@ class AppContainer extends React.Component {
     rpc.define('setQuery', (payload) => {
       this.setQuery(payload);
     });
-	rpc.define('setSelectionIndex', (payload) => {
+    rpc.define('setSelectionIndex', (payload) => {
       this.setSelectionIndex(payload);
     });
     rpc.define('requestAddResults', (__payload) => {
