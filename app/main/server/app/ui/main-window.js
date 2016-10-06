@@ -107,6 +107,9 @@ module.exports = class MainWindow {
   setQuery(query) {
     this.rpc.call('setQuery', query);
   }
+  setSelectionIndex(selId) {
+    this.rpc.call('setSelectionIndex', selId);
+  }
   enqueueToast(message, duration) {
     this.rpc.call('enqueueToast', { message, duration });
   }
