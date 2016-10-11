@@ -99,4 +99,9 @@ module.exports = class AppService {
     this.mainWindow.setQuery('');
     this.mainWindow.notifyPluginsReloading();
   }
+  setSelectionIndex(selId) {
+    this.mainWindow.show();
+    if (selId !== undefined)
+      this.mainWindow.setSelectionIndex(selId);
+  }
 };

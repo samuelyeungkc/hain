@@ -94,6 +94,9 @@ class AppContainer extends React.Component {
     rpc.define('setQuery', (payload) => {
       this.setQuery(payload);
     });
+    rpc.define('setSelectionIndex', (payload) => {
+      this.setSelectionIndex(payload);
+    });
     rpc.define('requestAddResults', (__payload) => {
       const { ticket, type, payload } = __payload;
       if (searchTicket.current !== ticket)
@@ -151,6 +154,12 @@ class AppContainer extends React.Component {
     this.setState({ query: _query, selectionIndex: 0 });
     this.refs.query.focus();
     this.search(_query);
+  }
+  
+  setSelectionIndex(selId) {
+    const _selId = selId || 0;
+    this.setState({ selectionIndex: _selId });
+    this.scrollTo(_selId);
   }
 
   scrollTo(selectionIndex) {
