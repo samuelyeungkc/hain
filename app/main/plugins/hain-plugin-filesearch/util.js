@@ -7,11 +7,11 @@ const matchUtil = require('../../shared/match-util');
 
 const BASENAME_MATCH_WEIGHT = 2.0;
 
-function computeRatio(filePath) {
+function computeRatio(filePath, extensions) {
   let ratio = 1;
   const ext = path.extname(filePath).toLowerCase();
   const basename = path.basename(filePath).toLowerCase();
-  if (ext !== '.lnk' && ext !== '.exe' && ext !== '.appref-ms')
+  if (!extensions.includes(ext))
     ratio *= 0.5;
   if (ext === '.lnk')
     ratio *= 1.5;
@@ -39,12 +39,12 @@ function combineFuzzyResults(combinedTarget, source) {
   }
 }
 
-function fuzzy(items, query) {
+function fuzzy(items, query, extensions) {
   const resultsByPath = matchUtil.fuzzy(items, query).slice(0, 20).map(x => {
     return {
       path: x.elem,
       html: matchUtil.makeStringBoldHtml(x.elem, x.matches),
-      score: x.score * computeRatio(x.elem)
+      score: x.score * computeRatio(x.elem, extensions)
     };
   });
   const resultsByBasename = matchUtil.fwdfuzzy(items, query, x => path.basename(x, path.extname(x))).slice(0, 20).map(x => {
@@ -56,7 +56,7 @@ function fuzzy(items, query) {
     return {
       path: allpath,
       html: containerPath + html + extname,
-      score: x.score * BASENAME_MATCH_WEIGHT * computeRatio(allpath)
+      score: x.score * BASENAME_MATCH_WEIGHT * computeRatio(allpath, extensions)
     };
   });
   const combined = [];

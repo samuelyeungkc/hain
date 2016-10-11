@@ -13,11 +13,13 @@ const RECENT_ITEM_COUNT = 50;
 const RECENT_ITEM_RATIO_HIGH = 3;
 const RECENT_ITEM_RATIO_LOW = 1.5;
 
-const matchFunc = (filePath, stats) => {
+const matchFunc = (filePath, extensions, stats) => {
   const ext = path.extname(filePath).toLowerCase();
   if (stats.isDirectory())
     return true;
-  return (ext === '.exe' || ext === '.lnk' || ext === '.appref-ms');
+  if (extensions.includes(ext))
+    return true;
+  return false;
 };
 
 function injectEnvVariable(dirPath) {
@@ -49,6 +51,7 @@ module.exports = (context) => {
 
   const recursiveSearchDirs = injectEnvVariables(initialPref.recursiveFolders || []);
   const flatSearchDirs = injectEnvVariables(initialPref.flatFolders || []);
+  const searchExtensions = initialPref.searchExtensions || [];
 
   const db = {};
   const lazyIndexingKeys = {};
@@ -60,7 +63,7 @@ module.exports = (context) => {
         logger.log(`can't find a dir: ${dir}`);
         continue;
       }
-      const files = yield co(readdir(dir, recursive, matchFunc));
+      const files = yield co(readdir(dir, searchExtensions, recursive, matchFunc));
       db[dir] = files;
       logger.log(`index updated ${dir}, ${files.length} files`);
     }
@@ -140,8 +143,8 @@ module.exports = (context) => {
 
   function search(query, res) {
     const query_trim = query.replace(' ', '');
-    const recentFuzzyResults = util.fuzzy(_recentUsedItems, query_trim).slice(0, 2);
-    const defaultFuzzyResults = util.fuzzy(db, query_trim);
+    const recentFuzzyResults = util.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
+    const defaultFuzzyResults = util.fuzzy(db, query_trim, searchExtensions);
 
     let recentSearchResults = [];
     if (recentFuzzyResults.length > 0) {
