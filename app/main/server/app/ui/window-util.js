@@ -2,23 +2,25 @@
 
 const electron = require('electron');
 
-function centerWindowOnSelectedScreen(window) {
+function centerWindowOnSelectedScreen(window, openOnActiveDisplay) {
   const screen = electron.screen;
 
   let selectedDisplay = screen.getPrimaryDisplay();
   const displays = screen.getAllDisplays();
   const cursorPos = screen.getCursorScreenPoint();
 
-  for (const display of displays) {
-    const bounds = display.bounds;
-    const [left, right, top, bottom] = [bounds.x, bounds.x + bounds.width, bounds.y, bounds.y + bounds.height];
-    if (cursorPos.x < left || cursorPos.x > right)
-      continue;
-    if (cursorPos.y < top || cursorPos.y > bottom)
-      continue;
+  if (openOnActiveDisplay) {
+    for (const display of displays) {
+      const bounds = display.bounds;
+      const [left, right, top, bottom] = [bounds.x, bounds.x + bounds.width, bounds.y, bounds.y + bounds.height];
+      if (cursorPos.x < left || cursorPos.x > right)
+        continue;
+      if (cursorPos.y < top || cursorPos.y > bottom)
+        continue;
 
-    selectedDisplay = display;
-    break;
+      selectedDisplay = display;
+      break;
+    }
   }
 
   const windowSize = window.getSize();

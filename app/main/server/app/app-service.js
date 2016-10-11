@@ -30,7 +30,7 @@ module.exports = class AppService {
     this.workerClient = workerClient;
     this.workerProxy = workerProxy;
 
-    this.mainWindow = new MainWindow(workerProxy);
+    this.mainWindow = new MainWindow(workerProxy, prefManager.appPref);
     this.prefWindow = new PrefWindow(prefManager);
     this.trayService = new TrayService(this, autoLauncher);
     this.shortcutService = new ShortcutService(this, prefManager.appPref);
