@@ -2,10 +2,6 @@
 
 const crypto = require('crypto');
 
-function generateKey() {
-  return crypto.randomBytes(256).toString('hex');
-}
-
 function encrypt(text, key) {
   const cipher = crypto.createCipher('aes192', key);
   let enc = cipher.update(text, 'utf8', 'hex');
@@ -20,4 +16,4 @@ function decrypt(encText, key) {
   return dec;
 }
 
-module.exports = { generateKey, encrypt, decrypt };
+module.exports = { encrypt, decrypt };

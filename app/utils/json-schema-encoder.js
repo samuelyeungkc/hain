@@ -16,7 +16,7 @@ function traverse(model, schema, callback, setter) {
     }
   } else if (objType === 'array') {
     const itemSchema = schema.items;
-    const items = model;
+    const items = model || [];
     for (let i = 0; i < items.length; ++i) {
       const _i = i;
       const item = items[i];
