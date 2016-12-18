@@ -5,6 +5,8 @@ const lo_assign = require('lodash.assign');
 
 function traverse(model, schema, callback, setter) {
   const objType = schema.type;
+  if (model === undefined || model === null)
+    return;
   if (objType === 'object') {
     const props = schema.properties;
     for (const propName in props) {
