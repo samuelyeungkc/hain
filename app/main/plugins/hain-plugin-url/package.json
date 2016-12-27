@@ -6,7 +6,6 @@
   "author": "Heejin Lee <monster@teamappetizer.com>",
   "license": "MIT",
   "hain": {
-    "prefix": null,
     "usage": "type any url to go",
     "icon": "#fa fa-link"
   }

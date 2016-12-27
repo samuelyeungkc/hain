@@ -6,7 +6,7 @@
   "author": "Heejin Lee <monster@teamappetizer.com>",
   "license": "MIT",
   "hain": {
-    "prefix": null,
+    "prefix": "/filesearch",
     "usage": "type anything to find executable files",
     "icon": "#fa fa-search"
   }
