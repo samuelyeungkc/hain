@@ -16,12 +16,13 @@ const INTERNAL_PLUGIN_REPO = path.join(__dirname, './plugins');
 const MAIN_PLUGIN_REPO = path.resolve(`${HAIN_USER_PATH}/plugins`);
 const DEV_PLUGIN_REPO = path.resolve(`${HAIN_USER_PATH}/devplugins`);
 
-const CURRENT_API_VERSION = 'hain-0.5.0';
+const CURRENT_API_VERSION = 'hain-0.6.0';
 const COMPATIBLE_API_VERSIONS = [
   'hain0',
   'hain-0.1.0',
   'hain-0.3.0',
   'hain-0.4.0',
+  'hain-0.5.0',
   CURRENT_API_VERSION
 ];
 
