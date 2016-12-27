@@ -7,7 +7,7 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const logger = require('../shared/logger');
-const iconFmt = require('./icon-fmt');
+const iconFmt = require('./utils/icon-fmt');
 const conf = require('../conf');
 
 module.exports = () => {

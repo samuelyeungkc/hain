@@ -128,7 +128,7 @@ class AppContainer extends React.Component {
       } else if (type === 'remove') {
         const _id = payload.id;
         results = lo_reject(results, (x) => {
-          return (x.id === _id && x.pluginId === payload.pluginId);
+          return (x.id === _id && x.context === payload.context);
         });
       }
 
@@ -155,7 +155,7 @@ class AppContainer extends React.Component {
     this.refs.query.focus();
     this.search(_query);
   }
-  
+
   setSelectionIndex(selId) {
     const _selId = selId || 0;
     this.setState({ selectionIndex: _selId });
@@ -199,7 +199,7 @@ class AppContainer extends React.Component {
     if (item === undefined)
       return;
     const params = {
-      pluginId: item.pluginId,
+      context: item.context,
       id: item.id,
       payload: item.payload
     };
@@ -214,17 +214,17 @@ class AppContainer extends React.Component {
       return;
     }
 
-    const pluginId = selectedResult.pluginId;
+    const context = selectedResult.context;
     const id = selectedResult.id;
     const payload = selectedResult.payload;
-    const previewHash = `${pluginId}.${id}`;
+    const previewHash = `${context}.${id}`;
 
     if (previewHash === this._renderedPreviewHash)
       return;
     this._renderedPreviewHash = previewHash;
 
     const ticket = previewTicket.newTicket();
-    rpc.call('renderPreview', { ticket, pluginId, id, payload });
+    rpc.call('renderPreview', { ticket, context, id, payload });
   }
 
   handleSelection(selectionDelta) {
@@ -349,10 +349,10 @@ class AppContainer extends React.Component {
 
   handleRightButtonClick(result, evt) {
     evt.stopPropagation();
-    const pluginId = result.pluginId;
+    const context = result.context;
     const id = result.id;
     const payload = result.payload;
-    rpc.call('buttonAction', { pluginId, id, payload });
+    rpc.call('buttonAction', { context, id, payload });
   }
 
   parseIconUrl(iconUrl) {
