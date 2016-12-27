@@ -8,6 +8,7 @@
         "type": "string"
       },
       "default": [
+        "/Applications",
         "~/Applications",
         "~/Desktop"
       ]
@@ -26,9 +27,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        ".app"
-      ]
+      "default": []
     }
   }
 }
