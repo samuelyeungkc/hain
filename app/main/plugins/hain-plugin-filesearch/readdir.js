@@ -3,6 +3,10 @@
 const fs = require('original-fs');
 const path = require('path');
 
+const RESULT_NO = 0;
+const RESULT_OK = 1;
+const RESULT_RECURSIVE_DIRECTORY = 2;
+
 function _readdir(dirPath) {
   return new Promise((resolve, reject) => {
     fs.readdir(dirPath, (err, files) => {
@@ -36,7 +40,7 @@ function _realpath(filePath) {
   });
 }
 
-function* readdir(dirPath, extensions, recursive, matcher) {
+function* readdir(dirPath, matcher) {
   const list = [];
   const pendingDirs = [dirPath];
   const scannedDirs = {};
@@ -56,12 +60,11 @@ function* readdir(dirPath, extensions, recursive, matcher) {
         const _path = path.join(realdir, file);
         try {
           const stat = yield _stat(_path);
-          if (matcher(_path, extensions, stat)) {
+          const matchResult = matcher(_path, stat);
+          if ((matchResult & RESULT_OK) != 0)
             list.push(_path);
-          }
-          if (stat.isDirectory() && recursive) {
+          if ((matchResult & RESULT_RECURSIVE_DIRECTORY) != 0)
             pendingDirs.push(_path);
-          }
         } catch (e) { }
       }
     } catch (e) { }
@@ -69,4 +72,9 @@ function* readdir(dirPath, extensions, recursive, matcher) {
   return list;
 }
 
-module.exports = readdir;
+module.exports = {
+  readdir,
+  RESULT_NO,
+  RESULT_OK,
+  RESULT_RECURSIVE_DIRECTORY
+};

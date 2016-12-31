@@ -7,6 +7,7 @@ const EventEmitter = require('events');
 
 const logger = require('../../shared/logger');
 const RpcChannel = require('../../shared/rpc-channel');
+const lo_assign = require('lodash.assign');
 
 module.exports = class WorkerClient extends EventEmitter {
   constructor() {
@@ -32,14 +33,21 @@ module.exports = class WorkerClient extends EventEmitter {
     if (!fs.existsSync(workerPath))
       throw new Error('can\'t execute plugin process');
 
-    this.workerProcess = cp.fork(workerPath, [], {
+    const workerOptions = {
       execArgv: ['--optimize_for_size', '--gc_global', '--always_compact'],
-      silent: true
-    });
+    };
 
-    // Workaround for Electron 1.3.4's strange stdio redirection
-    this.workerProcess.stdout.on('data', process.stdout.write);
-    this.workerProcess.stderr.on('data', process.stdout.write);
+    if (process.platform === 'win32') {
+      this.workerProcess = cp.fork(workerPath, [], lo_assign(workerOptions, {
+        silent: true
+      }));
+
+      // Workaround for Electron 1.3.4's strange stdio redirection
+      this.workerProcess.stdout.on('data', process.stdout.write);
+      this.workerProcess.stderr.on('data', process.stdout.write);
+    } else {
+      this.workerProcess = cp.fork(workerPath, [], workerOptions);
+    }
 
     this.workerProcess.on('message', (msg) => this._handleWorkerMessage(msg));
   }

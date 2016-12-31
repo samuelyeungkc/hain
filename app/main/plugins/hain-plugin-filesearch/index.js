@@ -7,23 +7,25 @@ const lo_findIndex = require('lodash.findindex');
 const path = require('path');
 
 const readdir = require('./readdir');
-const util = require('./util');
+const searchUtil = require('./search-util');
+const fileUtil = require('./file-util');
 
 const RECENT_ITEM_COUNT = 50;
 const RECENT_ITEM_RATIO_HIGH = 3;
 const RECENT_ITEM_RATIO_LOW = 1.5;
 
-const matchFunc = (filePath, extensions, stats) => {
-  const ext = path.extname(filePath).toLowerCase();
-  if (stats.isDirectory())
-    return true;
-  if (extensions.includes(ext))
-    return true;
-  return false;
-};
-
 function injectEnvVariable(dirPath) {
+  if (dirPath.length <= 0)
+    return dirPath;
+
+  // for macOS
   let _path = dirPath;
+  if (process.platform !== 'win32') {
+    if (_path[0] === '~')
+      _path = path.join(process.env.HOME, _path.slice(1));
+  }
+
+  // Inject Environment Variables
   for (const envVar in process.env) {
     const value = process.env[envVar];
     _path = _path.replace(`\${${envVar}}`, value);
@@ -57,13 +59,14 @@ module.exports = (context) => {
   const lazyIndexingKeys = {};
 
   function* refreshIndex(dirs, recursive) {
+    const matchFunc = fileUtil.createMatchFunc(recursive, searchExtensions);
     for (const dir of dirs) {
       logger.log(`refreshIndex ${dir}`);
       if (fs.existsSync(dir) === false) {
         logger.log(`can't find a dir: ${dir}`);
         continue;
       }
-      const files = yield co(readdir(dir, searchExtensions, recursive, matchFunc));
+      const files = yield co(readdir.readdir(dir, matchFunc));
       db[dir] = files;
       logger.log(`index updated ${dir}, ${files.length} files`);
     }
@@ -143,8 +146,8 @@ module.exports = (context) => {
 
   function search(query, res) {
     const query_trim = query.replace(' ', '');
-    const recentFuzzyResults = util.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
-    const defaultFuzzyResults = util.fuzzy(db, query_trim, searchExtensions);
+    const recentFuzzyResults = searchUtil.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
+    const defaultFuzzyResults = searchUtil.fuzzy(db, query_trim, searchExtensions);
 
     let recentSearchResults = [];
     if (recentFuzzyResults.length > 0) {
