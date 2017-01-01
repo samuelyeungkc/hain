@@ -1,9 +1,5 @@
 'use strict';
 
-const co = require('co');
-
-const logger = require('../shared/logger');
-
 const AppService = require('./app/app-service');
 const PrefManager = require('./preferences/pref-manager');
 const WorkerClient = require('./worker/worker-client');
