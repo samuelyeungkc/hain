@@ -64,6 +64,10 @@ module.exports = class AppService {
         self.trayService.createTray();
         iconProtocol.register();
       });
+
+      // Hide dock icon for macOS
+      if (process.platform === 'darwin')
+        electronApp.dock.hide();
     }).catch((err) => {
       logger.error(err);
     });
