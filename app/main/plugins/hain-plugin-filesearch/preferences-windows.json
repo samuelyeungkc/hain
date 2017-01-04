@@ -35,7 +35,8 @@
       "default": [
         ".appref-ms",
         ".exe",
-        ".lnk"
+        ".lnk",
+        ".bat"
       ]
     }
   }
