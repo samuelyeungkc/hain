@@ -98,7 +98,7 @@ module.exports = class AppService {
     this.prefWindow.show(prefId);
   }
   reloadPlugins() {
-    this.workerClient.reloadWorker();
+    this.workerClient.reload();
     this.workerProxy.initialize(this.prefManager.appPref.get());
     this.mainWindow.setQuery('');
     this.mainWindow.notifyPluginsReloading();

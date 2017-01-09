@@ -21,7 +21,7 @@ module.exports = class Server {
     this.workerHandler.initialize();
     return this.appService.initializeAndLaunch()
       .then(() => {
-        this.workerClient.loadWorker();
+        this.workerClient.load();
         this.workerProxy.initialize(this.prefManager.appPref.get());
       });
   }

@@ -16,17 +16,13 @@ module.exports = class WorkerClient extends EventEmitter {
     this.workerProcess = null;
     this.rpc = RpcChannel.create('#worker', this.send.bind(this), this.on.bind(this));
   }
-  reloadWorker() {
+  reload() {
     logger.debug('WorkerWrapper: reloading worker');
 
-    if (this.workerProcess !== null) {
-      this.workerProcess.kill();
-      this.workerProcess = null;
-    }
-
-    this.loadWorker();
+    this.terminate();
+    this.load();
   }
-  loadWorker() {
+  load() {
     logger.debug('WorkerWrapper: loading worker');
 
     const workerPath = path.join(__dirname, '../../worker/index.js');
@@ -47,9 +43,18 @@ module.exports = class WorkerClient extends EventEmitter {
       this.workerProcess.stderr.on('data', process.stdout.write);
     } else {
       this.workerProcess = cp.fork(workerPath, [], workerOptions);
+
+      // Kill worker process on exit
+      process.on('exit', this.terminate.bind(this));
     }
 
     this.workerProcess.on('message', (msg) => this._handleWorkerMessage(msg));
+  }
+  terminate() {
+    if (this.workerProcess === null)
+      return;
+    this.workerProcess.kill();
+    this.workerProcess = null;
   }
   send(channel, payload) {
     this.workerProcess.send({ channel, payload });
