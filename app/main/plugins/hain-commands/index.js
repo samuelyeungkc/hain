@@ -37,7 +37,7 @@ module.exports = (context) => {
     }, () => {
       res.remove('__temp__');
       res.add({
-        title: 'Sorry, Failed to check for update',
+        title: 'Oops! Hain was unable to check for an update.',
         desc: NAME
       });
     });
@@ -46,7 +46,7 @@ module.exports = (context) => {
   function startup() {
     checkForUpdate().then(ret => {
       if (ret.version !== pkg.version) {
-        toast.enqueue('New Version Available! Please Enter `/update`', 2500);
+        toast.enqueue('New version available! Please enter `/update`.', 2500);
       }
     });
   }
@@ -82,7 +82,7 @@ module.exports = (context) => {
         app.reloadPlugins();
       },
       '/restart': () => {
-        toast.enqueue('Hain will be restarted, it will takes seconds');
+        toast.enqueue('Hain will be restarted. This will take a few seconds.');
         setTimeout(() => app.restart(), 1000);
         app.setQuery('');
       },
