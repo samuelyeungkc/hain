@@ -6,8 +6,8 @@ module.exports = class LoggerAPI {
   constructor(context) {
     this.appService = context.appService;
   }
-  log(msg) {
-    logger.debug(msg);
-    this.appService.mainWindow.log(msg);
+  log(...args) {
+    logger.info(...args);
+    this.appService.mainWindow.log(args);
   }
 };
