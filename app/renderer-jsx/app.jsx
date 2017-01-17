@@ -89,7 +89,7 @@ class AppContainer extends React.Component {
       this.toastQueue.push({ message, duration });
     });
     rpc.define('log', (payload) => {
-      console.log(payload);
+      console.log(...payload);
     });
     rpc.define('setQuery', (payload) => {
       this.setQuery(payload);
@@ -155,7 +155,7 @@ class AppContainer extends React.Component {
     this.refs.query.focus();
     this.search(_query);
   }
-  
+
   setSelectionIndex(selId) {
     const _selId = selId || 0;
     this.setState({ selectionIndex: _selId });
