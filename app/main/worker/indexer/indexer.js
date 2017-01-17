@@ -1,14 +1,5 @@
 'use strict';
 
-// const indexItem = {
-//   id: '',
-//   primaryText: '',
-//   secondaryText: '',
-//   icon: '',
-//   payload: '',
-//   redirect: ''
-// };
-
 const lo_assign = require('lodash.assign');
 const lo_isArray = require('lodash.isarray');
 const lo_isFunction = require('lodash.isfunction');
@@ -17,10 +8,12 @@ const lo_isPlainObject = require('lodash.isplainobject');
 const matcher = require('./matcher');
 
 const SECONDARY_RATIO = 0.75;
+const MIN_SCORE = 0.01;
 
-class IndexerInstance {
-  constructor(pluginId) {
-    this._pluginId = pluginId;
+class Indexer {
+  constructor(pluginId, defaultIcon) {
+    this.pluginId = pluginId;
+    this.defaultIcon = defaultIcon;
     this.items = {};
     this._cachedResults = [];
   }
@@ -35,6 +28,7 @@ class IndexerInstance {
   }
   search(query) {
     this._cachedResults.length = 0;
+    // Search items
     for (const key in this.items) {
       const item = this.items[key];
       const searchResult = this._searchItem(item, query);
@@ -43,9 +37,11 @@ class IndexerInstance {
       else if (lo_isPlainObject(searchResult))
         this._cachedResults.push(searchResult);
     }
-    // Inject pluginId
+    // Inject default plugin properties into results
     for (const elem of this._cachedResults) {
-      elem.pluginId = this._pluginId;
+      elem.pluginId = this.pluginId;
+      if (!elem.icon)
+        elem.icon = this.defaultIcon;
     }
     return this._cachedResults;
   }
@@ -70,7 +66,7 @@ class IndexerInstance {
         score = Math.max(score, secondaryScore);
       }
 
-      const failedToMatch = (score <= 0);
+      const failedToMatch = (score <= MIN_SCORE);
       if (failedToMatch)
         continue;
 
@@ -90,4 +86,4 @@ class IndexerInstance {
   }
 }
 
-module.exports = IndexerInstance;
+module.exports = Indexer;

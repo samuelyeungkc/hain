@@ -1,4 +1,3 @@
-/* global process */
 'use strict';
 
 const lo_assign = require('lodash.assign');
@@ -11,7 +10,7 @@ const matchUtil = require('../shared/match-util');
 const logger = require('../shared/logger');
 const prefStore = require('./pref-store');
 const storageManager = require('./storage-manager');
-const indexer = require('./indexer');
+const IndexerManager = require('./indexer/manager');
 const PreferencesObject = require('../shared/preferences-object');
 const helpUtil = require('./utils/help-util');
 const responseUtil = require('./utils/response-util');
@@ -19,9 +18,12 @@ const pluginInstaller = require('./plugin-installer');
 
 const conf = require('../conf');
 
+const PLUGIN_QUERY_PREFIX_REGEX = /^[?@=\\/#]/;
+
 module.exports = (workerContext) => {
   const pluginLoader = require('./plugin-loader')();
 
+  let indexerManager = null;
   let plugins = null;
   let pluginConfigs = null;
   let pluginPrefIds = null;
@@ -52,8 +54,8 @@ module.exports = (workerContext) => {
 
   function generatePluginContext(pluginId, pluginConfig) {
     const localContext = {
-      localStorage: storageManager.createPluginLocalStorage(pluginId),
-      indexer: indexer.createIndexerInstance(pluginId)
+      localStorage: storageManager.createLocalStorage(pluginId),
+      indexer: indexerManager.createIndexerForPlugin(pluginId, pluginConfig.icon)
     };
     const hasPreferences = (pluginConfig.prefSchema !== null);
     if (hasPreferences) {
@@ -64,8 +66,21 @@ module.exports = (workerContext) => {
     return lo_assign({}, pluginContextBase, localContext);
   }
 
-  function _startup() {
-    logger.debug('startup: begin');
+  function* initialize() {
+    yield pluginInstaller.installPreinstalledPlugins();
+
+    setupIndexerManager();
+
+    const ret = pluginLoader.loadPlugins(generatePluginContext);
+    plugins = ret.plugins;
+    pluginConfigs = ret.pluginConfigs;
+    pluginPrefIds = lo_reject(lo_keys(pluginConfigs), x => pluginConfigs[x].prefSchema === null);
+
+    callPluginsStartup();
+  }
+
+  function callPluginsStartup() {
+    logger.debug('callPluginsStartup: begin');
     for (const prop in plugins) {
       logger.debug(`startup: ${prop}`);
       const startupFunc = plugins[prop].startup;
@@ -79,37 +94,30 @@ module.exports = (workerContext) => {
         logger.error(e.stack || e);
       }
     }
-    logger.debug('startup: end');
+    logger.debug('callPluginsStartup: end');
   }
 
-  function* initialize() {
-    yield pluginInstaller.installPreinstalledPlugins();
-
-    const ret = pluginLoader.loadPlugins(generatePluginContext);
-    plugins = ret.plugins;
-    pluginConfigs = ret.pluginConfigs;
-    pluginPrefIds = lo_reject(lo_keys(pluginConfigs), x => pluginConfigs[x].prefSchema === null);
-
-    _startup();
+  function setupIndexerManager() {
+    indexerManager = new IndexerManager(storageManager.createLocalStorage('indexer'));
+    indexerManager.setExecuteFunction(executeOnPlugin);
   }
-
-  const QUERY_PREFIX_REGEX = /^[?@=\\/]/;
 
   function searchAll(query, resFunc) {
-    if (query.length === 0) {
+    const noQuery = (query.length <= 0);
+    if (noQuery) {
       resFunc({ type: 'add', payload: helpUtil.createIntroHelp(pluginConfigs) });
       return;
     }
 
-    if (!QUERY_PREFIX_REGEX.test(query)) {
-      // Search indexer
-      resFunc({ type: 'add', payload: indexer.search(query) });
-      return;
-    }
+    const isPluginQuery = PLUGIN_QUERY_PREFIX_REGEX.test(query);
+    if (isPluginQuery)
+      searchPlugins(query, resFunc);
+    else
+      searchIndexer(query, resFunc);
+  }
 
-    let sysResults = [];
-
-    // Search plugins
+  function searchPlugins(query, resFunc) {
+    const sysResults = [];
     for (const prop in plugins) {
       const pluginId = prop;
       const plugin = plugins[pluginId];
@@ -124,7 +132,7 @@ module.exports = (workerContext) => {
       if (query_lower.startsWith(prefix_lower) === false) {
         const prefixHelp = helpUtil.makePrefixHelp(pluginConfig, query);
         if (prefixHelp && prefixHelp.length > 0)
-          sysResults = sysResults.concat(prefixHelp);
+          sysResults.push(...prefixHelp);
         continue;
       }
 
@@ -136,21 +144,34 @@ module.exports = (workerContext) => {
         logger.error(e.stack || e);
       }
     }
-
     // Send System-generated Results
     if (sysResults.length > 0)
       resFunc({ type: 'add', payload: sysResults });
   }
 
+  function searchIndexer(query, resFunc) {
+    resFunc({ type: 'add', payload: indexerManager.search(query) });
+  }
+
   function execute(context, id, payload) {
-    // FIXME redirect가 이 부분을 대체하지 않았을까 생각해봄
-    if (plugins[context] === undefined) {
-      if (payload)
-        workerContext.app.setQuery(payload);
+    const isRedirect = (!context && lo_isString(payload));
+    if (isRedirect) {
+      workerContext.app.setQuery(payload);
       return;
     }
 
-    const executeFunc = plugins[context].execute;
+    if (context === IndexerManager.CONTEXT)
+      return executeOnIndexer(id, payload);
+    return executeOnPlugin(context, id, payload);
+  }
+
+  function executeOnIndexer(id, payload) {
+    const { pluginId, extraPayload } = payload;
+    indexerManager.execute(pluginId, id, extraPayload);
+  }
+
+  function executeOnPlugin(pluginId, id, payload) {
+    const executeFunc = plugins[pluginId].execute;
     if (executeFunc === undefined)
       return;
     try {

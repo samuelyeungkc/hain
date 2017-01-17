@@ -1,17 +1,18 @@
 'use strict';
 
+const lo_assign = require('lodash.assign');
+
 const pkg = require('../../../package.json');
 const checkForUpdate = require('./check-update');
 
 const CONTRIBUTORS_URL = 'https://github.com/appetizermonster/hain/graphs/contributors';
-const COMMANDS = ['/reload', '/restart', '/quit', '/about', '/preferences', '/update'];
 const NAME = 'hain-commands';
 
 module.exports = (context) => {
   const app = context.app;
-  const matchUtil = context.matchUtil;
   const toast = context.toast;
   const shell = context.shell;
+  const indexer = context.indexer;
 
   function handleUpdate(res) {
     res.add({
@@ -49,49 +50,77 @@ module.exports = (context) => {
         toast.enqueue('New version available! Please enter `/update`.', 2500);
       }
     });
+    registerIndexerShortcuts();
+  }
+
+  function registerIndexerShortcuts() {
+    const shortcuts = [
+      {
+        primaryText: 'Reload Plugins',
+        redirect: '/hain reload'
+      },
+      {
+        primaryText: 'Restart Hain',
+        redirect: '/hain restart'
+      },
+      {
+        primaryText: 'About Hain',
+        redirect: '/hain about'
+      },
+      {
+        primaryText: 'Quit Hain',
+        redirect: '/hain quit'
+      },
+      {
+        primaryText: 'Open Preferences',
+        redirect: '/hain preferences'
+      },
+      {
+        primaryText: 'Check for Update',
+        redirect: '/hain update'
+      }
+    ];
+    indexer.set('shortcuts', shortcuts.map((x) => lo_assign(x, { secondaryText: x.redirect, group: 'Hain Commands' })));
   }
 
   function search(query, res) {
-    const query_lower = query.toLowerCase();
+    const query_lower = query.trim().toLowerCase();
     const basicCommandResults = {
-      '/reload': 'Reload Plugins',
-      '/restart': 'Restart Hain',
-      '/about': `Hain v${pkg.version}`,
-      '/quit': 'Quit Hain',
-      '/preferences': 'Open Preferences'
+      'reload': 'Reload Plugins',
+      'restart': 'Restart Hain',
+      'about': `Hain v${pkg.version}`,
+      'quit': 'Quit Hain',
+      'preferences': 'Open Preferences'
     };
 
     const commandResult = basicCommandResults[query_lower];
-    if (commandResult !== undefined)
+    if (commandResult !== undefined) {
       return res.add({
         id: query_lower,
         title: commandResult,
         desc: NAME
       });
-
-    if (query_lower === '/update') {
-      return handleUpdate(res);
     }
-
-    return res.add(_makeCommandsHelp(query));
+    if (query_lower === 'update')
+      return handleUpdate(res);
   }
 
   function execute(id, payload) {
     const commands = {
-      '/reload': () => {
+      'reload': () => {
         app.reloadPlugins();
       },
-      '/restart': () => {
+      'restart': () => {
         toast.enqueue('Hain will be restarted. This will take a few seconds.');
         setTimeout(() => app.restart(), 1000);
         app.setQuery('');
       },
-      '/quit': () => app.quit(),
-      '/about': () => {
+      'quit': () => app.quit(),
+      'about': () => {
         shell.openExternal(CONTRIBUTORS_URL);
         app.close(true);
       },
-      '/preferences': () => {
+      'preferences': () => {
         app.openPreferences();
         app.close(true);
       },
@@ -104,20 +133,6 @@ module.exports = (context) => {
     const func = commands[id];
     if (func !== undefined)
       func();
-  }
-
-  function _makeCommandsHelp(query) {
-    const ret = matchUtil.head(COMMANDS, query).map((x) => {
-      return {
-        id: 'redirect',
-        payload: x.elem,
-        redirect: x.elem,
-        title: matchUtil.makeStringBoldHtml(x.elem, x.matches),
-        desc: NAME,
-        score: 0
-      };
-    });
-    return ret;
   }
 
   return { startup, search, execute };

@@ -8,7 +8,6 @@ const path = require('path');
 
 const readdir = require('./readdir');
 const searchUtil = require('./search-util');
-const fileUtil = require('./file-util');
 
 const RECENT_ITEM_COUNT = 50;
 const RECENT_ITEM_RATIO_HIGH = 3;
@@ -47,29 +46,40 @@ module.exports = (context) => {
   const shell = context.shell;
   const app = context.app;
   const initialPref = context.preferences.get();
-  const localStorage = context.localStorage;
+  const indexer = context.indexer;
   const toast = context.toast;
-  let _recentUsedItems = [];
 
   const recursiveSearchDirs = injectEnvVariables(initialPref.recursiveFolders || []);
   const flatSearchDirs = injectEnvVariables(initialPref.flatFolders || []);
   const searchExtensions = initialPref.searchExtensions || [];
 
-  const db = {};
   const lazyIndexingKeys = {};
 
-  function* refreshIndex(dirs, recursive) {
-    const matchFunc = fileUtil.createMatchFunc(recursive, searchExtensions);
+  function fileMatcher(filePath, stats) {
+    const ext = path.extname(filePath).toLowerCase();
+    if (stats.isDirectory())
+      return true;
+    if (searchExtensions.includes(ext))
+      return true;
+    return false;
+  }
+
+  function* findFilesAndUpdateIndexer(dirs, recursive) {
     for (const dir of dirs) {
-      logger.log(`refreshIndex ${dir}`);
+      logger.log(`try to update files in ${dir}`);
       if (fs.existsSync(dir) === false) {
         logger.log(`can't find a dir: ${dir}`);
         continue;
       }
-      const files = yield co(readdir.readdir(dir, matchFunc));
-      db[dir] = files;
-      logger.log(`index updated ${dir}, ${files.length} files`);
+      const files = yield co(readdir.readdir(dir, recursive, fileMatcher));
+      updateIndexer(dir, files);
     }
+  }
+
+  function updateIndexer(indexKey, files) {
+    const indexerElements = searchUtil.filesToIndexerElements(files);
+    indexer.set(indexKey, indexerElements);
+    logger.log(`Indexer has updated ${indexKey}, ${files.length} files`);
   }
 
   function lazyRefreshIndex(dir, recursive) {
@@ -78,7 +88,7 @@ module.exports = (context) => {
       clearTimeout(_lazyKey);
 
     lazyIndexingKeys[dir] = setTimeout(() => {
-      co(refreshIndex([dir], recursive));
+      co(findFilesAndUpdateIndexer([dir], recursive)).catch(logger.log);
     }, 10000);
   }
 
@@ -94,34 +104,10 @@ module.exports = (context) => {
     }
   }
 
-  function addRecentItem(item) {
-    const idx = _recentUsedItems.indexOf(item);
-    if (idx >= 0)
-      _recentUsedItems.splice(idx, 1);
-
-    if (fs.existsSync(item))
-      _recentUsedItems.unshift(item);
-
-    _recentUsedItems = _recentUsedItems.slice(0, RECENT_ITEM_COUNT);
-    localStorage.setItem('recentUsedItems', _recentUsedItems);
-  }
-
-  function updateRecentItems() {
-    const aliveItems = [];
-    for (const item of _recentUsedItems) {
-      if (fs.existsSync(item))
-        aliveItems.push(item);
-    }
-    _recentUsedItems = aliveItems;
-  }
-
   function startup() {
-    _recentUsedItems = localStorage.getItemSync('recentUsedItems') || [];
-    updateRecentItems();
-
     co(function* () {
-      yield* refreshIndex(recursiveSearchDirs, true);
-      yield* refreshIndex(flatSearchDirs, false);
+      yield* findFilesAndUpdateIndexer(recursiveSearchDirs, true);
+      yield* findFilesAndUpdateIndexer(flatSearchDirs, false);
       yield* setupWatchers(recursiveSearchDirs, true);
       yield* setupWatchers(flatSearchDirs, false);
     }).catch((err) => {
@@ -130,49 +116,46 @@ module.exports = (context) => {
     });
   }
 
-  function _fuzzyResultToSearchResult(results) {
-    return results.map(x => {
-      const path_base64 = new Buffer(x.path).toString('base64');
-      return {
-        id: x.path,
-        title: path.basename(x.path, path.extname(x.path)),
-        desc: x.html,
-        icon: `icon://${path_base64}`,
-        group: 'Files & Folders',
-        score: x.score
-      };
-    });
-  }
+  // function _fuzzyResultToSearchResult(results) {
+  //   return results.map(x => {
+  //     const path_base64 = new Buffer(x.path).toString('base64');
+  //     return {
+  //       id: x.path,
+  //       title: path.basename(x.path, path.extname(x.path)),
+  //       desc: x.html,
+  //       icon: `icon://${path_base64}`,
+  //       group: 'Files & Folders',
+  //       score: x.score
+  //     };
+  //   });
+  // }
 
-  function search(query, res) {
-    const query_trim = query.replace(' ', '');
-    const recentFuzzyResults = searchUtil.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
-    const defaultFuzzyResults = searchUtil.fuzzy(db, query_trim, searchExtensions);
+  // function search(query, res) {
+  //   const query_trim = query.replace(' ', '');
+  //   const recentFuzzyResults = searchUtil.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
+  //   const defaultFuzzyResults = searchUtil.fuzzy(db, query_trim, searchExtensions);
 
-    let recentSearchResults = [];
-    if (recentFuzzyResults.length > 0) {
-      // Update score by usage frequency
-      const RATIO_DELTA = (RECENT_ITEM_RATIO_HIGH - RECENT_ITEM_RATIO_LOW);
-      const scoredRecentFuzzyResults = recentFuzzyResults.map((x) => {
-        const nearIdx = _recentUsedItems.indexOf(x.path);
-        const ratio = ((RECENT_ITEM_COUNT - nearIdx) / RECENT_ITEM_COUNT) * RATIO_DELTA + RECENT_ITEM_RATIO_LOW;
-        x.score = x.score * ratio;
-        return x;
-      });
-      recentSearchResults = _fuzzyResultToSearchResult(scoredRecentFuzzyResults);
-    }
+  //   let recentSearchResults = [];
+  //   if (recentFuzzyResults.length > 0) {
+  //     // Update score by usage frequency
+  //     const RATIO_DELTA = (RECENT_ITEM_RATIO_HIGH - RECENT_ITEM_RATIO_LOW);
+  //     const scoredRecentFuzzyResults = recentFuzzyResults.map((x) => {
+  //       const nearIdx = _recentUsedItems.indexOf(x.path);
+  //       const ratio = ((RECENT_ITEM_COUNT - nearIdx) / RECENT_ITEM_COUNT) * RATIO_DELTA + RECENT_ITEM_RATIO_LOW;
+  //       x.score = x.score * ratio;
+  //       return x;
+  //     });
+  //     recentSearchResults = _fuzzyResultToSearchResult(scoredRecentFuzzyResults);
+  //   }
 
-    // Reject if it is duplicated with recent items
-    const sanitizedFuzzyResults = lo_reject(defaultFuzzyResults, x => lo_findIndex(recentFuzzyResults, { path: x.path }) >= 0);
-    const fileSearchResults = _fuzzyResultToSearchResult(sanitizedFuzzyResults);
-    const searchResults = recentSearchResults.concat(fileSearchResults).slice(0, 15);
-    res.add(searchResults);
-  }
+  //   // Reject if it is duplicated with recent items
+  //   const sanitizedFuzzyResults = lo_reject(defaultFuzzyResults, x => lo_findIndex(recentFuzzyResults, { path: x.path }) >= 0);
+  //   const fileSearchResults = _fuzzyResultToSearchResult(sanitizedFuzzyResults);
+  //   const searchResults = recentSearchResults.concat(fileSearchResults).slice(0, 15);
+  //   res.add(searchResults);
+  // }
 
   function execute(id, payload) {
-    // Update recent item, and it will be deleted if file don't exists
-    addRecentItem(id);
-
     if (fs.existsSync(id) === false) {
       toast.enqueue('Sorry, Could\'nt Find a File');
       return;
@@ -182,5 +165,5 @@ module.exports = (context) => {
     shell.openItem(id);
   }
 
-  return { startup, search, execute };
+  return { startup, execute };
 };

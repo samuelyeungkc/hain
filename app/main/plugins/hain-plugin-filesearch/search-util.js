@@ -7,6 +7,22 @@ const matchUtil = require('../../shared/match-util');
 
 const BASENAME_MATCH_WEIGHT = 2.0;
 
+function fileToIndexerElement(filePath) {
+  const basenameWithoutExt = path.basename(filePath, path.extname(filePath));
+  const path_b64 = new Buffer(filePath).toString('base64');
+  return {
+    id: filePath,
+    primaryText: basenameWithoutExt,
+    secondaryText: filePath,
+    icon: `icon://${path_b64}`,
+    group: 'Files & Folders'
+  };
+}
+
+function filesToIndexerElements(files) {
+  return files.map(fileToIndexerElement);
+}
+
 function computeRatio(filePath, extensions) {
   let ratio = 1;
   const ext = path.extname(filePath).toLowerCase();
@@ -66,4 +82,4 @@ function fuzzy(items, query, extensions) {
   return result;
 }
 
-module.exports = { fuzzy };
+module.exports = { filesToIndexerElements, fuzzy };

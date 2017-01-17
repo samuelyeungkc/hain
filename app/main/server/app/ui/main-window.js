@@ -62,16 +62,16 @@ module.exports = class MainWindow {
       this.workerProxy.searchAll(ticket, query);
     });
     this.rpc.define('execute', (__payload) => {
-      const { pluginId, id, payload } = __payload;
-      this.workerProxy.execute(pluginId, id, payload);
+      const { context, id, payload } = __payload;
+      this.workerProxy.execute(context, id, payload);
     });
     this.rpc.define('renderPreview', (__payload) => {
-      const { ticket, pluginId, id, payload } = __payload;
-      this.workerProxy.renderPreview(ticket, pluginId, id, payload);
+      const { ticket, context, id, payload } = __payload;
+      this.workerProxy.renderPreview(ticket, context, id, payload);
     });
     this.rpc.define('buttonAction', (__payload) => {
-      const { pluginId, id, payload } = __payload;
-      this.workerProxy.buttonAction(pluginId, id, payload);
+      const { context, id, payload } = __payload;
+      this.workerProxy.buttonAction(context, id, payload);
     });
     this.rpc.define('close', () => this.hide());
   }

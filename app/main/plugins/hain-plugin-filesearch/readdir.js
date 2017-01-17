@@ -40,8 +40,8 @@ function _realpath(filePath) {
   });
 }
 
-function* readdir(dirPath, matcher) {
-  const list = [];
+function* readdir(dirPath, recursive, matcher) {
+  const matchedPaths = [];
   const pendingDirs = [dirPath];
   const scannedDirs = {};
   while (pendingDirs.length > 0) {
@@ -60,16 +60,15 @@ function* readdir(dirPath, matcher) {
         const _path = path.join(realdir, file);
         try {
           const stat = yield _stat(_path);
-          const matchResult = matcher(_path, stat);
-          if ((matchResult & RESULT_OK) != 0)
-            list.push(_path);
-          if ((matchResult & RESULT_RECURSIVE_DIRECTORY) != 0)
+          if (recursive && stat.isDirectory())
             pendingDirs.push(_path);
+          if (matcher(_path, stat))
+            matchedPaths.push(_path);
         } catch (e) { }
       }
     } catch (e) { }
   }
-  return list;
+  return matchedPaths;
 }
 
 module.exports = {
