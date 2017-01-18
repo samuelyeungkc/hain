@@ -3,10 +3,6 @@
 const fs = require('original-fs');
 const path = require('path');
 
-const RESULT_NO = 0;
-const RESULT_OK = 1;
-const RESULT_RECURSIVE_DIRECTORY = 2;
-
 function _readdir(dirPath) {
   return new Promise((resolve, reject) => {
     fs.readdir(dirPath, (err, files) => {
@@ -71,9 +67,4 @@ function* readdir(dirPath, recursive, matcher) {
   return matchedPaths;
 }
 
-module.exports = {
-  readdir,
-  RESULT_NO,
-  RESULT_OK,
-  RESULT_RECURSIVE_DIRECTORY
-};
+module.exports = { readdir };

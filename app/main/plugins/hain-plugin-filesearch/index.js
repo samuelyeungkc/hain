@@ -2,16 +2,10 @@
 
 const fs = require('original-fs');
 const co = require('co');
-const lo_reject = require('lodash.reject');
-const lo_findIndex = require('lodash.findindex');
 const path = require('path');
 
 const readdir = require('./readdir');
 const searchUtil = require('./search-util');
-
-const RECENT_ITEM_COUNT = 50;
-const RECENT_ITEM_RATIO_HIGH = 3;
-const RECENT_ITEM_RATIO_LOW = 1.5;
 
 function injectEnvVariable(dirPath) {
   if (dirPath.length <= 0)
@@ -115,45 +109,6 @@ module.exports = (context) => {
       logger.log(err.stack);
     });
   }
-
-  // function _fuzzyResultToSearchResult(results) {
-  //   return results.map(x => {
-  //     const path_base64 = new Buffer(x.path).toString('base64');
-  //     return {
-  //       id: x.path,
-  //       title: path.basename(x.path, path.extname(x.path)),
-  //       desc: x.html,
-  //       icon: `icon://${path_base64}`,
-  //       group: 'Files & Folders',
-  //       score: x.score
-  //     };
-  //   });
-  // }
-
-  // function search(query, res) {
-  //   const query_trim = query.replace(' ', '');
-  //   const recentFuzzyResults = searchUtil.fuzzy(_recentUsedItems, query_trim, searchExtensions).slice(0, 2);
-  //   const defaultFuzzyResults = searchUtil.fuzzy(db, query_trim, searchExtensions);
-
-  //   let recentSearchResults = [];
-  //   if (recentFuzzyResults.length > 0) {
-  //     // Update score by usage frequency
-  //     const RATIO_DELTA = (RECENT_ITEM_RATIO_HIGH - RECENT_ITEM_RATIO_LOW);
-  //     const scoredRecentFuzzyResults = recentFuzzyResults.map((x) => {
-  //       const nearIdx = _recentUsedItems.indexOf(x.path);
-  //       const ratio = ((RECENT_ITEM_COUNT - nearIdx) / RECENT_ITEM_COUNT) * RATIO_DELTA + RECENT_ITEM_RATIO_LOW;
-  //       x.score = x.score * ratio;
-  //       return x;
-  //     });
-  //     recentSearchResults = _fuzzyResultToSearchResult(scoredRecentFuzzyResults);
-  //   }
-
-  //   // Reject if it is duplicated with recent items
-  //   const sanitizedFuzzyResults = lo_reject(defaultFuzzyResults, x => lo_findIndex(recentFuzzyResults, { path: x.path }) >= 0);
-  //   const fileSearchResults = _fuzzyResultToSearchResult(sanitizedFuzzyResults);
-  //   const searchResults = recentSearchResults.concat(fileSearchResults).slice(0, 15);
-  //   res.add(searchResults);
-  // }
 
   function execute(id, payload) {
     if (fs.existsSync(id) === false) {
