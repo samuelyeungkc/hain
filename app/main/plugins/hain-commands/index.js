@@ -57,27 +57,33 @@ module.exports = (context) => {
     const shortcuts = [
       {
         primaryText: 'Reload Plugins',
-        redirect: '/hain reload'
+        redirect: '/hain reload',
+        id: 'reload'
       },
       {
         primaryText: 'Restart Hain',
-        redirect: '/hain restart'
+        redirect: '/hain restart',
+        id: 'restart'
       },
       {
         primaryText: 'About Hain',
-        redirect: '/hain about'
+        redirect: '/hain about',
+        id: 'redirect_about'
       },
       {
         primaryText: 'Quit Hain',
-        redirect: '/hain quit'
+        redirect: '/hain quit',
+        id: 'quit'
       },
       {
         primaryText: 'Open Preferences',
-        redirect: '/hain preferences'
+        redirect: '/hain preferences',
+        id: 'preferences'
       },
       {
         primaryText: 'Check for Update',
-        redirect: '/hain update'
+        redirect: '/hain update',
+        id: 'redirect_update'
       }
     ];
     indexer.set('shortcuts', shortcuts.map((x) => lo_assign(x, { secondaryText: x.redirect, group: 'Hain Commands' })));
@@ -107,6 +113,12 @@ module.exports = (context) => {
 
   function execute(id, payload) {
     const commands = {
+      'redirect_about': () => {
+        app.setQuery('/hain about');
+      },
+      'redirect_update': () => {
+        app.setQuery('/hain update');
+      },
       'reload': () => {
         app.reloadPlugins();
       },
