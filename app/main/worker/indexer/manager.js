@@ -4,7 +4,7 @@ const lo_orderBy = require('lodash.orderby');
 const lo_isString = require('lodash.isstring');
 const logger = require('../../shared/logger');
 
-const RecentItemManager = require('./recent-item-manager');
+const ItemPriorityManager = require('./item-priority-manager');
 const Indexer = require('./indexer');
 
 const CONTEXT = '@indexer';
@@ -13,8 +13,8 @@ class IndexerManager {
   constructor(localStorage) {
     this.indexers = {};
     this.executeFunc = (pluginId, id, payload) => { };
-    this.recentItemManager = new RecentItemManager(localStorage);
-    this.recentItemManager.load();
+    this.itemPriorityManager = new ItemPriorityManager(localStorage);
+    this.itemPriorityManager.load();
   }
   search(query) {
     const totalResults = [];
@@ -29,25 +29,26 @@ class IndexerManager {
     const sorted = lo_orderBy(results, ['score'], ['desc']);
     if (sorted.length > limit)
       sorted.length = limit;
-    const mapped = sorted.map((x) => {
+    const refinedItems = sorted.map((x) => {
       const payload = {
         pluginId: x.pluginId,
         extraPayload: x.payload
       };
-      const recentItemId = this.makeIdForRecentItem(x.pluginId, x.id);
+      const itemPriorityId = this.makeItemPriorityId(x.pluginId, x.id);
+      const score = this.itemPriorityManager.applyPriorityToScore(itemPriorityId, x.score);
       return {
         title: x.primaryText,
-        desc: x.secondaryText,
+        desc: score.toString(),
         icon: x.icon,
         group: x.group,
         redirect: x.redirect,
         context: CONTEXT,
         id: x.id,
-        score: x.score * this.recentItemManager.getSearchRatio(recentItemId),
+        score,
         payload
       };
     });
-    return mapped;
+    return refinedItems;
   }
   createIndexerForPlugin(pluginId, defaultIcon) {
     const indexer = new Indexer(pluginId, defaultIcon);
@@ -61,14 +62,14 @@ class IndexerManager {
     }
     this.executeFunc(pluginId, id, extraPayload);
 
-    const recentItemId = this.makeIdForRecentItem(pluginId, id);
-    this.recentItemManager.markExecuted(recentItemId);
-    this.recentItemManager.save();
+    const itemPriorityId = this.makeItemPriorityId(pluginId, id);
+    this.itemPriorityManager.markItemHasExecuted(itemPriorityId);
+    this.itemPriorityManager.save();
   }
   setExecuteFunction(executeFunc) {
     this.executeFunc = executeFunc;
   }
-  makeIdForRecentItem(pluginId, id) {
+  makeItemPriorityId(pluginId, id) {
     if (!lo_isString(id))
       return null;
     return `${pluginId}?@${id}`;
