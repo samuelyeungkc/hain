@@ -40,6 +40,7 @@
     "lodash.reject": "^4.3.0",
     "lodash.remove": "^4.3.0",
     "lodash.set": "^4.1.0",
+    "lodash.shuffle": "^4.2.0",
     "lodash.size": "^4.0.6",
     "lodash.trimstart": "^4.5.1",
     "lodash.uniq": "^4.2.1",

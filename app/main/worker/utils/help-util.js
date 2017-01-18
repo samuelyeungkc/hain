@@ -1,5 +1,7 @@
 'use strict';
 
+const lo_shuffle = require('lodash.shuffle');
+
 const textUtil = require('../../shared/text-util');
 const matchUtil = require('../../shared/match-util');
 
@@ -38,7 +40,7 @@ function createIntroHelp(pluginConfigs) {
     const help = makeIntroHelp(pluginConfig);
     results.push(help);
   }
-  return results;
+  return lo_shuffle(results);
 }
 
 module.exports = {
