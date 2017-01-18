@@ -89,7 +89,7 @@ class AppContainer extends React.Component {
       this.toastQueue.push({ message, duration });
     });
     rpc.define('log', (payload) => {
-      console.log(payload);
+      console.log(...payload);
     });
     rpc.define('setQuery', (payload) => {
       this.setQuery(payload);
