@@ -136,6 +136,10 @@ module.exports = (workerContext) => {
         continue;
       }
 
+      const noSearchFunc = !plugin.search;
+      if (noSearchFunc)
+        continue;
+
       const localQuery = query.substring(prefix_lower.length);
       const pluginResponse = responseUtil.createResponseObject(resFunc, pluginId, pluginConfig);
       try {
