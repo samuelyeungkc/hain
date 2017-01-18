@@ -47,7 +47,7 @@ module.exports = (context) => {
   function startup() {
     checkForUpdate().then(ret => {
       if (ret.version !== pkg.version) {
-        toast.enqueue('New version available! Please enter `/update`.', 2500);
+        toast.enqueue('New version available! Please enter `/hain update`.', 2500);
       }
     });
     registerIndexerShortcuts();

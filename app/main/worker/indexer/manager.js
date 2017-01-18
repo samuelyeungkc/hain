@@ -38,7 +38,7 @@ class IndexerManager {
       const score = this.itemPriorityManager.applyPriorityToScore(itemPriorityId, x.score);
       return {
         title: x.primaryText,
-        desc: score.toString(),
+        desc: x.secondaryText,
         icon: x.icon,
         group: x.group,
         redirect: x.redirect,
