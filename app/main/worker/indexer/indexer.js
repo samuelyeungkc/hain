@@ -7,7 +7,7 @@ const lo_isPlainObject = require('lodash.isplainobject');
 
 const matcher = require('./matcher');
 
-const SECONDARY_RATIO = 0.75;
+const SECONDARY_RATIO = 0.5;
 const MIN_SCORE = 0.01;
 
 class Indexer {

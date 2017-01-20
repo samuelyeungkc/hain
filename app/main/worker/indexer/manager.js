@@ -26,7 +26,7 @@ class IndexerManager {
     return this.sortAndRefineSearchedResults(totalResults, 15);
   }
   sortAndRefineSearchedResults(results, limit) {
-    const sorted = lo_orderBy(results, ['score'], ['desc']);
+    const sorted = lo_orderBy(results, [this._computeItemScoreWithPriority.bind(this)], ['desc']);
     if (sorted.length > limit)
       sorted.length = limit;
     const refinedItems = sorted.map((x) => {
@@ -34,8 +34,6 @@ class IndexerManager {
         pluginId: x.pluginId,
         extraPayload: x.payload
       };
-      const itemPriorityId = this.makeItemPriorityId(x.pluginId, x.id);
-      const score = this.itemPriorityManager.applyPriorityToScore(itemPriorityId, x.score);
       return {
         title: x.primaryText,
         desc: x.secondaryText,
@@ -44,11 +42,15 @@ class IndexerManager {
         redirect: x.redirect,
         context: CONTEXT,
         id: x.id,
-        score,
         payload
       };
     });
     return refinedItems;
+  }
+  _computeItemScoreWithPriority(item) {
+    const itemPriorityId = this.makeItemPriorityId(item.pluginId, item.id);
+    const score = this.itemPriorityManager.applyPriorityToScore(itemPriorityId, item.score);
+    return score;
   }
   createIndexerForPlugin(pluginId, defaultIcon) {
     const indexer = new Indexer(pluginId, defaultIcon);
