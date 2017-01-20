@@ -40,8 +40,11 @@ module.exports = (context) => {
   function calculate(query) {
     try {
       const ans = math.eval(query);
-      if (lo_isNumber(ans) || lo_isString(ans) || (lo_isObject(ans) && lo_has(ans, 'value')))
-        return ans.toString();
+      if (lo_isNumber(ans) || lo_isString(ans) || (lo_isObject(ans) && lo_has(ans, 'value'))) {
+        const ansString = ans.toString();
+        if (ansString.trim() !== query.trim())
+          return ansString;
+      }
     } catch (e) { }
   }
 
