@@ -11,19 +11,38 @@ module.exports = (context) => {
   const app = context.app;
   const clipboard = context.clipboard;
   const toast = context.toast;
+  const indexer = context.indexer;
+
+  function startup() {
+    indexer.set('math', (query) => {
+      const answer = calculate(query);
+      if (!answer)
+        return;
+      return makeResultItem('primaryText', query, answer);
+    });
+  }
 
   function search(query, res) {
+    const answer = calculate(query);
+    if (!answer)
+      return;
+    res.add(makeResultItem('title', query, answer));
+  }
+
+  function makeResultItem(titleKey, query, answer) {
+    const result = {};
+    result[titleKey] = `${query.trim()} = ${answer}`;
+    result.group = 'Math';
+    result.payload = answer;
+    return result;
+  }
+
+  function calculate(query) {
     try {
       const ans = math.eval(query);
-      if (lo_isNumber(ans) || lo_isString(ans) || (lo_isObject(ans) && lo_has(ans, 'value'))) {
-        res.add({
-          title: `${query.trim()} = ${ans.toString()}`,
-          group: 'Math',
-          payload: ans.toString()
-        });
-      }
-    } catch (e) {
-    }
+      if (lo_isNumber(ans) || lo_isString(ans) || (lo_isObject(ans) && lo_has(ans, 'value')))
+        return ans.toString();
+    } catch (e) { }
   }
 
   function execute(id, payload) {
@@ -32,5 +51,5 @@ module.exports = (context) => {
     toast.enqueue(`${payload} has copied into clipboard`);
   }
 
-  return { search, execute };
+  return { startup, search, execute };
 };
