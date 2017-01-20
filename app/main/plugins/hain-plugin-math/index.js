@@ -15,7 +15,7 @@ module.exports = (context) => {
 
   function startup() {
     indexer.set('math', (query) => {
-      const answer = calculate(query);
+      const answer = calculate(query, false);
       if (!answer)
         return;
       return makeResultItem('primaryText', query, answer);
@@ -23,7 +23,7 @@ module.exports = (context) => {
   }
 
   function search(query, res) {
-    const answer = calculate(query);
+    const answer = calculate(query, true);
     if (!answer)
       return;
     res.add(makeResultItem('title', query, answer));
@@ -37,12 +37,13 @@ module.exports = (context) => {
     return result;
   }
 
-  function calculate(query) {
+  function calculate(query, showRedundantResult) {
     try {
       const ans = math.eval(query);
       if (lo_isNumber(ans) || lo_isString(ans) || (lo_isObject(ans) && lo_has(ans, 'value'))) {
         const ansString = ans.toString();
-        if (ansString.trim() !== query.trim())
+        const isResultMeaningful = (ansString.trim() !== query.trim());
+        if (isResultMeaningful || showRedundantResult)
           return ansString;
       }
     } catch (e) { }
