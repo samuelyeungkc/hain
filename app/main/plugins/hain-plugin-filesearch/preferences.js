@@ -1,8 +1,8 @@
 'use strict';
 
-let prefFile = './preferences-windows.json';
+let prefFile = './win32/preferences.json';
 
 if (process.platform === 'darwin')
-  prefFile = './preferences-macos.json';
+  prefFile = './darwin/preferences.json';
 
 module.exports = require(prefFile);

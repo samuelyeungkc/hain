@@ -43,23 +43,21 @@ function* readdir(dirPath, recursive, matcher) {
   while (pendingDirs.length > 0) {
     const dir = pendingDirs.shift();
     const realdir = yield _realpath(dir);
-    let files = [];
 
-    if (scannedDirs[realdir]) {
+    if (scannedDirs[realdir])
       continue;
-    }
     scannedDirs[realdir] = true;
 
     try {
-      files = yield _readdir(realdir);
+      const files = yield _readdir(realdir);
       for (const file of files) {
-        const _path = path.join(realdir, file);
+        const filePath = path.join(realdir, file);
         try {
-          const stat = yield _stat(_path);
-          if (recursive && stat.isDirectory())
-            pendingDirs.push(_path);
-          if (matcher(_path, stat))
-            matchedPaths.push(_path);
+          const stat = yield _stat(filePath);
+          if (stat.isDirectory() && recursive)
+            pendingDirs.push(filePath);
+          if (matcher(filePath, stat))
+            matchedPaths.push(filePath);
         } catch (e) { }
       }
     } catch (e) { }
