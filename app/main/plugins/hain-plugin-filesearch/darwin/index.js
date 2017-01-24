@@ -41,7 +41,8 @@ module.exports = (context) => {
       return {
         id: file,
         primaryText: appInfo.name,
-        secondaryText: appInfo.path
+        secondaryText: appInfo.path,
+        group: 'Applications'
       };
     });
   }
