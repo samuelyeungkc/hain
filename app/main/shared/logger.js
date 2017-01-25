@@ -9,11 +9,13 @@ const logger = new (winston.Logger)({
       json: false,
       prettyPrint: true,
       maxFiles: 3,
-      maxsize: 1024 * 1024
+      maxsize: 1024 * 1024,
+			showLevel: false,
     }),
     new (winston.transports.Console)({
       timestamp: true,
-      prettyPrint: true
+      prettyPrint: true,
+			showLevel: false,
     })
   ]
 });
