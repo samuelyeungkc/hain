@@ -57,6 +57,8 @@ module.exports = class WorkerClient extends EventEmitter {
     this.workerProcess = null;
   }
   send(channel, payload) {
+    if (this.workerProcess === null)
+      return;
     this.workerProcess.send({ channel, payload });
   }
   _handleWorkerMessage(msg) {
