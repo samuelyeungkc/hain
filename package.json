@@ -5,6 +5,7 @@
     "start": "node ./run",
     "dev": "gulp && node ./run",
     "build": "gulp build-all",
+    "build-debian": "gulp build-debian",
     "test": "cd app && jest",
     "tdd": "cd app && jest --watch"
   },
@@ -33,5 +34,8 @@
     "gulp-util": "^3.0.7",
     "gulp-zip": "^3.2.0",
     "jest-cli": "12.1.1"
+  },
+  "optionalDependencies": {
+    "electron-installer-debian": "^0.3.0"
   }
 }

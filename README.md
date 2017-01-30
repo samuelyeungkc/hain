@@ -56,6 +56,12 @@ npm run dev
 npm run build
 ```
 
+### Build from Source a deb package for Linux
+
+```shell
+npm run build-debian
+```
+
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md)  
 
