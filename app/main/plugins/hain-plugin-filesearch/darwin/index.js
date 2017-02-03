@@ -24,27 +24,29 @@ module.exports = (context) => {
         logger.log(`can't find a dir: ${dir}`);
         continue;
       }
-      const files = yield co(fileUtil.findApplications(dir, true));
-      updateIndexer(dir, files);
+      const files = yield fileUtil.findApplications(dir, true);
+      yield updateIndexer(dir, files);
     }
   }
 
-  function updateIndexer(indexKey, files) {
-    const indexerElements = filesToIndexerElements(files);
+  function* updateIndexer(indexKey, files) {
+    const indexerElements = yield filesToIndexerElements(files);
     indexer.set(indexKey, indexerElements);
     logger.log(`Indexer has updated ${indexKey}, ${files.length} files`);
   }
 
-  function filesToIndexerElements(files) {
-    return files.map((file) => {
-      const appInfo = fileUtil.getApplicationInfo(file);
-      return {
+  function* filesToIndexerElements(files) {
+    const elems = [];
+    for (const file of files) {
+      const appInfo = yield fileUtil.getApplicationInfo(file);
+      elems.push({
         id: file,
         primaryText: appInfo.name,
         secondaryText: appInfo.path,
         group: 'Applications'
-      };
-    });
+      });
+    }
+    return elems;
   }
 
   function lazyRefreshIndex(dir, recursive) {

@@ -1,9 +1,8 @@
 'use strict';
 
-const fs = require('fs');
 const fsp = require('fs-promise');
 const path = require('path');
-const plist = require('plist');
+const macBundleUtil = require('../../../../native/mac-bundle-util');
 
 function* findApplications(dirPath, recursive) {
   const matchedPaths = [];
@@ -35,14 +34,11 @@ function* findApplications(dirPath, recursive) {
   return matchedPaths;
 }
 
-function getApplicationInfo(appPath) {
-  const infoPlistPath = path.join(appPath, 'Contents', 'Info.plist');
-  const infoPlistText = fs.readFileSync(infoPlistPath, 'utf8');
-  const info = plist.parse(infoPlistText);
-  const basename = path.basename(appPath, '.app');
+function* getApplicationInfo(appPath) {
+  const name = macBundleUtil.getLocalizedBundleDisplayName(appPath);
   return {
     path: appPath,
-    name: info.CrAppModeShortcutName || info.CFBundleDisplayName || info.CFBundleName || basename
+    name: name
   };
 }
 
