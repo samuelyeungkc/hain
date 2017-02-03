@@ -16,7 +16,8 @@ NAN_METHOD(getLocalizedBundleDisplayName) {
   @autoreleasepool {
     NSString *bundlePath = [NSString stringWithUTF8String:*param1];
     NSString *bundleName = [BundleUtils getLocalizedBundleDisplayNameWithPath: bundlePath];
-    info.GetReturnValue().Set(Nan::New([bundleName UTF8String]).ToLocalChecked());
+    if (bundleName)
+      info.GetReturnValue().Set(Nan::New([bundleName UTF8String]).ToLocalChecked());
   }
 }
 

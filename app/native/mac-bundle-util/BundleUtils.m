@@ -8,12 +8,31 @@
     if (bundle == nil)
         return nil;
     
-    NSString *bundleName = [[bundle localizedInfoDictionary] objectForKey:@"CFBundleName"];
+    NSDictionary *localizedInfo = [bundle localizedInfoDictionary];
+    if (localizedInfo) {
+        NSString *bundleName = [self _getBundleNameFromInfoDictionary:localizedInfo];
+        if (bundleName)
+            return bundleName;
+    }
+    
+    NSDictionary *info = [bundle infoDictionary];
+    if (info) {
+        NSString *bundleName = [self _getBundleNameFromInfoDictionary:info];
+        if (bundleName)
+            return bundleName;
+    }
+    return nil;
+}
+
++ (NSString *)_getBundleNameFromInfoDictionary:(NSDictionary *)info {
+    NSString *bundleName = [info objectForKey:@"CFBundleName"];
     if (bundleName)
         return bundleName;
     
-    NSString *bundleDisplayName = [[bundle localizedInfoDictionary] objectForKey:@"CFBundleDisplayName"];
-    return bundleDisplayName;
+    NSString *bundleDisplayName = [info objectForKey:@"CFBundleDisplayName"];
+    if (bundleDisplayName)
+        return bundleDisplayName;
+    return nil;
 }
 
 + (BOOL)saveApplicationIconAsPngWithPath:(NSString *)bundlePath pngPath:(NSString *)pngPath {
