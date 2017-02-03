@@ -6,6 +6,7 @@ const lo_isFunction = require('lodash.isfunction');
 const lo_isPlainObject = require('lodash.isplainobject');
 
 const matcher = require('./matcher');
+const logger = require('../../shared/logger');
 
 const SECONDARY_RATIO = 0.5;
 const MIN_SCORE = 0.01;
@@ -46,10 +47,14 @@ class Indexer {
     return this._cachedResults;
   }
   _searchItem(item, query) {
-    if (lo_isArray(item))
-      return this._searchArrayItem(item, query);
-    else if (lo_isFunction(item))
-      return this._searchFunctionItem(item, query);
+    try {
+      if (lo_isArray(item))
+        return this._searchArrayItem(item, query);
+      else if (lo_isFunction(item))
+        return this._searchFunctionItem(item, query);
+    } catch (e) {
+      logger.error(e);
+    }
     return null;
   }
   _searchArrayItem(item, query) {
@@ -57,6 +62,9 @@ class Indexer {
     const matched = [];
     const query_lower = query.toLowerCase();
     for (const elem of arr) {
+      if (!elem.primaryText)
+        continue;
+
       const primaryMatch = matcher.computeMatchScore(elem.primaryText, query_lower);
       let score = primaryMatch.score;
 
