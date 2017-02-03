@@ -4,7 +4,7 @@ const electron = require('electron');
 const shell = electron.shell;
 const BrowserWindow = electron.BrowserWindow;
 
-const platformUtil = require('../../../../platform-util');
+const platformUtil = require('../../../../native/platform-util');
 const windowUtil = require('./window-util');
 const RpcChannel = require('../../../shared/rpc-channel');
 

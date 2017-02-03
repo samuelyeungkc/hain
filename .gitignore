@@ -3,7 +3,7 @@ node_modules
 /_localStorage/
 /app/renderer
 
-/app/platform-util/build
+/app/native/*/build
 
 /plugins/
 /devplugins/

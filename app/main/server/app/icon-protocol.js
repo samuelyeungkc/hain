@@ -5,7 +5,7 @@ const SimpleCache = require('simple-lru-cache');
 const electron = require('electron');
 
 const logger = require('../../shared/logger');
-const platformUtil = require('../../../platform-util');
+const platformUtil = require('../../../native/platform-util');
 
 function register() {
   const cache = new SimpleCache({ maxSize: 100 });
