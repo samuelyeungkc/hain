@@ -14,6 +14,7 @@ const TrayService = require('./ui/tray-service');
 const firstLaunch = require('./first-launch');
 const ShortcutService = require('./shortcut-service');
 const iconProtocol = require('./icon-protocol');
+const appIconProtocol = require('./app-icon-protocol');
 const logger = require('../../shared/logger');
 
 const AutoLauncher = require('./auto-launcher');
@@ -63,6 +64,7 @@ module.exports = class AppService {
 
         self.trayService.createTray();
         iconProtocol.register();
+        appIconProtocol.register();
       });
 
       // Hide dock icon for macOS

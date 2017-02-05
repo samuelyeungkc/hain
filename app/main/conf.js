@@ -33,6 +33,7 @@ const PLUGIN_REPOS = [
 ];
 
 module.exports = {
+  HAIN_USER_PATH,
   PLUGIN_PREF_DIR,
   APP_PREF_DIR,
   INTERNAL_PLUGIN_REPO,

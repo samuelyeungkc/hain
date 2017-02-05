@@ -41,6 +41,7 @@ module.exports = (context) => {
       const appInfo = yield fileUtil.getApplicationInfo(file);
       elems.push({
         id: file,
+        icon: `appicon://${encodeURI(appInfo.path)}`,
         primaryText: appInfo.name,
         secondaryText: appInfo.path,
         group: 'Applications'
