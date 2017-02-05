@@ -7,8 +7,39 @@ using v8::Value;
 using v8::Object;
 using v8::Function;
 using v8::String;
+using Nan::AsyncQueueWorker;
+using Nan::AsyncWorker;
+using Nan::Callback;
+using Nan::HandleScope;
 using Nan::New;
 using Nan::Null;
+
+class AppIconWorker : public AsyncWorker {
+public:
+	AppIconWorker(Callback *callback, std::string bundlePath, std::string pngPath)
+   : AsyncWorker(callback), bundlePath(bundlePath), pngPath(pngPath), success(false) {}
+
+	void Execute() {
+    @autoreleasepool {
+      NSString *s_bundlePath = [NSString stringWithUTF8String:bundlePath.c_str()];
+      NSString *s_pngPath = [NSString stringWithUTF8String:pngPath.c_str()];
+      
+      success = [BundleUtils saveApplicationIconAsPngWithPath: s_bundlePath pngPath: s_pngPath];
+    }
+	}
+
+	void HandleOKCallback() {
+		HandleScope scope;
+    
+    Local<Value> argv[] = { Nan::New(success) };
+    callback->Call(1, argv);
+	}
+
+private:
+	std::string bundlePath;
+  std::string pngPath;
+  bool success;
+};
 
 NAN_METHOD(getLocalizedBundleDisplayName) {
 	v8::String::Utf8Value param1(info[0]->ToString());
@@ -24,14 +55,11 @@ NAN_METHOD(getLocalizedBundleDisplayName) {
 NAN_METHOD(saveApplicationIconAsPng) {
 	v8::String::Utf8Value param1(info[0]->ToString());
 	v8::String::Utf8Value param2(info[1]->ToString());
+  Callback *callback = new Callback(info[2].As<Function>());
+  std::string bundlePath(*param1);
+  std::string pngPath(*param2);
 
-  @autoreleasepool {
-    NSString *bundlePath = [NSString stringWithUTF8String:*param1];
-    NSString *pngPath = [NSString stringWithUTF8String:*param2];
-    
-    BOOL success = [BundleUtils saveApplicationIconAsPngWithPath: bundlePath pngPath: pngPath];
-    info.GetReturnValue().Set(success);
-  }
+  AsyncQueueWorker(new AppIconWorker(callback, bundlePath, pngPath));
 }
 
 void Init(Local<Object> exports) {

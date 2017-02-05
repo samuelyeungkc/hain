@@ -12,14 +12,13 @@ function getLocalizedBundleDisplayName(bundlePath) {
   return appName;
 }
 
-function saveApplicationIconAsPng(bundlePath, pngPath) {
-  let success = false;
+function saveApplicationIconAsPng(bundlePath, pngPath, callback) {
   try {
-    success = macBundleUtil.saveApplicationIconAsPng(bundlePath, pngPath);
+    macBundleUtil.saveApplicationIconAsPng(bundlePath, pngPath, callback);
   } catch (e) {
     console.error(e);
+    callback(false);
   }
-  return success;
 }
 
 module.exports = {
