@@ -33,7 +33,7 @@ gulp.task('renderer', ['deps', 'clean:renderer'], () => {
   return js;
 });
 
-function build(arch, platform) {
+function build(arch, platform, icon) {
   return new Promise((resolve, reject) => {
     packager({
       arch,
@@ -43,7 +43,7 @@ function build(arch, platform) {
       ignore: /(renderer-jsx|__tests__)/gi,
       overwrite: true,
       out: path.join(__dirname, 'out'),
-      icon: path.join(__dirname, 'build', 'icon.ico'),
+      icon: path.join(__dirname, 'build', icon || 'icon.ico'),
       'version-string': {
         ProductName: 'Hain',
         CompanyName: 'Heejin Lee'
@@ -114,6 +114,10 @@ gulp.task('build-zip', ['build-zip-ia32', 'build-zip-x64']);
 gulp.task('build-debian', ['renderer'], () => {
   return build('x64', 'linux')
     .then(() => buildDebianPkg());
+});
+
+gulp.task('build-darwin', ['renderer', 'deps'], () => {
+  return build('x64', 'darwin', 'icon.icns');
 });
 
 gulp.task('build-installer', ['build', 'build-zip'], () => {
