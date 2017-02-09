@@ -8,11 +8,71 @@ const checkForUpdate = require('./check-update');
 const CONTRIBUTORS_URL = 'https://github.com/appetizermonster/hain/graphs/contributors';
 const NAME = 'hain-commands';
 
+const commands = [
+  {
+    primaryText: 'About Hain',
+    redirect: '/hain about',
+    id: 'redirect_about'
+  },
+  {
+    primaryText: 'Open Preferences',
+    id: 'preferences'
+  },
+  {
+    primaryText: 'Check for Update',
+    redirect: '/hain update',
+    id: 'redirect_update'
+  },
+  {
+    primaryText: 'Reload Plugins',
+    id: 'reload'
+  },
+  {
+    primaryText: 'Restart Hain',
+    id: 'restart'
+  },
+  {
+    primaryText: 'Quit Hain',
+    id: 'quit'
+  }
+];
+
 module.exports = (context) => {
   const app = context.app;
   const toast = context.toast;
   const shell = context.shell;
   const indexer = context.indexer;
+
+  function startup() {
+    checkForUpdate().then(ret => {
+      if (ret.version !== pkg.version) {
+        toast.enqueue('New version available! Please enter `/hain update`.', 2500);
+      }
+    });
+    registerIndexerShortcuts();
+  }
+
+  function registerIndexerShortcuts() {
+    indexer.set('shortcuts', commands.map((x) => lo_assign(x, { secondaryText: x.redirect || NAME, group: 'Hain Commands' })));
+  }
+
+  function search(query, res) {
+    const query_lower = query.trim().toLowerCase();
+    if (query_lower === 'about')
+      return handleAbout(res);
+    else if (query_lower === 'update')
+      return handleUpdate(res);
+    else
+      return handleShowHelp(res);
+  }
+
+  function handleAbout(res) {
+    res.add({
+      id: 'about',
+      title: `Hain v${pkg.version}`,
+      desc: NAME
+    });
+  }
 
   function handleUpdate(res) {
     res.add({
@@ -44,75 +104,19 @@ module.exports = (context) => {
     });
   }
 
-  function startup() {
-    checkForUpdate().then(ret => {
-      if (ret.version !== pkg.version) {
-        toast.enqueue('New version available! Please enter `/hain update`.', 2500);
-      }
-    });
-    registerIndexerShortcuts();
-  }
-
-  function registerIndexerShortcuts() {
-    const shortcuts = [
-      {
-        primaryText: 'Reload Plugins',
-        redirect: '/hain reload',
-        id: 'reload'
-      },
-      {
-        primaryText: 'Restart Hain',
-        redirect: '/hain restart',
-        id: 'restart'
-      },
-      {
-        primaryText: 'About Hain',
-        redirect: '/hain about',
-        id: 'redirect_about'
-      },
-      {
-        primaryText: 'Quit Hain',
-        redirect: '/hain quit',
-        id: 'quit'
-      },
-      {
-        primaryText: 'Open Preferences',
-        redirect: '/hain preferences',
-        id: 'preferences'
-      },
-      {
-        primaryText: 'Check for Update',
-        redirect: '/hain update',
-        id: 'redirect_update'
-      }
-    ];
-    indexer.set('shortcuts', shortcuts.map((x) => lo_assign(x, { secondaryText: x.redirect, group: 'Hain Commands' })));
-  }
-
-  function search(query, res) {
-    const query_lower = query.trim().toLowerCase();
-    const basicCommandResults = {
-      'reload': 'Reload Plugins',
-      'restart': 'Restart Hain',
-      'about': `Hain v${pkg.version}`,
-      'quit': 'Quit Hain',
-      'preferences': 'Open Preferences'
-    };
-
-    const commandResult = basicCommandResults[query_lower];
-    if (commandResult !== undefined) {
-      return res.add({
-        id: query_lower,
-        title: commandResult,
-        desc: NAME
-      });
-    }
-    if (query_lower === 'update')
-      return handleUpdate(res);
+  function handleShowHelp(res) {
+    res.add(commands.map((x) => {
+      return {
+        id: x.id,
+        title: x.primaryText,
+        desc: x.secondaryText || NAME,
+        redirect: x.redirect
+      };
+    }));
   }
 
   function execute(id, payload) {
-    const commands = {
+    const actions = {
       'redirect_about': () => {
         app.setQuery('/hain about');
       },
@@ -142,7 +146,7 @@ module.exports = (context) => {
       },
       'redirect': () => app.setQuery(payload)
     };
-    const func = commands[id];
+    const func = actions[id];
     if (func !== undefined)
       func();
   }
