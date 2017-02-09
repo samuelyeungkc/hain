@@ -5,7 +5,7 @@ const Registry = require('winreg');
 module.exports = class AutoLauncher {
   constructor(opts) {
     this.appName = opts.name;
-    this.appPath = opts.path;
+    this.appPath = `"${opts.path}" ${opts.args}`;
     this.reg = new Registry({
       hive: Registry.HKCU,
       key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'

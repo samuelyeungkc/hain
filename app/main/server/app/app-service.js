@@ -20,7 +20,8 @@ const logger = require('../../shared/logger');
 const AutoLauncher = require('./auto-launcher');
 const autoLauncher = new AutoLauncher({
   name: 'Hain',
-  path: `"${process.execPath}" --silent`
+  path: process.execPath,
+  args: '--silent'
 });
 
 module.exports = class AppService {
