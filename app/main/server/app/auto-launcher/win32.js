@@ -5,7 +5,7 @@ const Registry = require('winreg');
 module.exports = class AutoLauncher {
   constructor(opts) {
     this.appName = opts.name;
-    this.appPath = `"${opts.path}" ${opts.args}`;
+    this.appPath = opts.path;
     this.reg = new Registry({
       hive: Registry.HKCU,
       key: '\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
@@ -35,5 +35,9 @@ module.exports = class AutoLauncher {
         resolve(item != null);
       });
     });
+  }
+  isLaunchedAtLogin() {
+    // This function isn't supported in Windows
+    return false;
   }
 };

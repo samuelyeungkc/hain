@@ -20,8 +20,7 @@ const logger = require('../../shared/logger');
 const AutoLauncher = require('./auto-launcher');
 const autoLauncher = new AutoLauncher({
   name: 'Hain',
-  path: process.execPath,
-  args: '--silent'
+  path: `"${process.execPath}" --silent`
 });
 
 module.exports = class AppService {
@@ -44,7 +43,7 @@ module.exports = class AppService {
         autoLauncher.enable();
 
       const isRestarted = (lo_includes(process.argv, '--restarted'));
-      const silentLaunch = (lo_includes(process.argv, '--silent'));
+      const silentLaunch = (lo_includes(process.argv, '--silent') || autoLauncher.isLaunchedAtLogin());
       const shouldQuit = electronApp.makeSingleInstance((cmdLine, workingDir) => {
         if (self._isRestarting)
           return;
