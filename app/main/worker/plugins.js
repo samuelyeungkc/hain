@@ -52,10 +52,25 @@ module.exports = (workerContext) => {
     matchutil: matchUtil
   };
 
-  function generatePluginContext(pluginId, pluginConfig) {
+	function createLogger(pluginId) {
+		let prefix = `[${pluginId.replace(/hain-(plugin-)?/, '')}] `;
+		return {
+			log: (...args) => {
+				if(typeof args[0] === 'string')
+					args[0] = prefix + args[0];
+				else
+					args.unshift(prefix);
+
+				workerContext.logger.log(...args);
+			}
+		};
+	}
+
+	function generatePluginContext(pluginId, pluginConfig) {
     const localContext = {
       localStorage: storageManager.createLocalStorage(pluginId),
-      indexer: indexerManager.createIndexerForPlugin(pluginId, pluginConfig.icon)
+      indexer: indexerManager.createIndexerForPlugin(pluginId, pluginConfig.icon),
+			logger: createLogger(pluginId),
     };
     const hasPreferences = (pluginConfig.prefSchema !== null);
     if (hasPreferences) {
