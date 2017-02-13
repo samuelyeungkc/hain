@@ -5,6 +5,8 @@ const lo_isArray = require('lodash.isarray');
 const lo_isFunction = require('lodash.isfunction');
 const lo_isPlainObject = require('lodash.isplainobject');
 
+const logger = require('../../shared/logger');
+
 const matcher = require('./matcher');
 
 const SECONDARY_RATIO = 0.5;
@@ -46,10 +48,16 @@ class Indexer {
     return this._cachedResults;
   }
   _searchItem(item, query) {
+
     if (lo_isArray(item))
       return this._searchArrayItem(item, query);
-    else if (lo_isFunction(item))
-      return this._searchFunctionItem(item, query);
+    else if (lo_isFunction(item)) {
+	   	try {
+				return this._searchFunctionItem(item, query);
+			} catch(e) {
+				logger.error(e.stack || e);
+			}
+		}
     return null;
   }
   _searchArrayItem(item, query) {
