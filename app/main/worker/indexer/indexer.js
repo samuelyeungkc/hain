@@ -24,8 +24,11 @@ class Indexer {
 
     this.items[key] = funcOrArray;
   }
-  remove(key) {
+  unset(key) {
     delete this.items[key];
+  }
+  remove(key) {
+    this.unset(key);
   }
   search(query) {
     this._cachedResults.length = 0;
