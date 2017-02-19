@@ -13,3 +13,7 @@ node_modules
 
 /out
 *.nupkg
+
+/.idea
+hain-debug*.log
+npm-debug.log.*
