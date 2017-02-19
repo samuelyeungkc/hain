@@ -1,41 +1,41 @@
 'use strict';
 
-const electron      = require('electron');
-const shell         = electron.shell;
+const electron = require('electron');
+const shell = electron.shell;
 const BrowserWindow = electron.BrowserWindow;
 
 const platformUtil = require('../../../../native/platform-util');
-const windowUtil   = require('./window-util');
-const RpcChannel   = require('../../../shared/rpc-channel');
+const windowUtil = require('./window-util');
+const RpcChannel = require('../../../shared/rpc-channel');
 
 const ipc = electron.ipcMain;
 
 module.exports = class MainWindow {
   constructor(workerProxy, appPref) {
-    this.workerProxy   = workerProxy;
-    this.appPref       = appPref;
+    this.workerProxy = workerProxy;
+    this.appPref = appPref;
     this.browserWindow = null;
-    this.rpc           = RpcChannel.create('#mainWindow', this._send.bind(this), this._on.bind(this));
+    this.rpc = RpcChannel.create('#mainWindow', this._send.bind(this), this._on.bind(this));
     this._setupHandlers();
   }
 
   createWindow(onComplete) {
     const browserWindow = new BrowserWindow({
-      width      : 800,
-      height     : 530,
+      width: 800,
+      height: 530,
       alwaysOnTop: true,
-      center     : true,
-      frame      : false,
-      show       : false,
-      closable   : false,
+      center: true,
+      frame: false,
+      show: false,
+      closable: false,
       minimizable: false,
       maximizable: false,
-      moveable   : false,
-      resizable  : false,
+      moveable: false,
+      resizable: false,
       skipTaskbar: true
     });
 
-    if(onComplete)
+    if (onComplete)
       browserWindow.webContents.on('did-finish-load', onComplete);
 
     browserWindow.webContents.on('new-window', (evt, url) => {
@@ -44,7 +44,7 @@ module.exports = class MainWindow {
     });
     browserWindow.loadURL(`file://${__dirname}/../../../../dist/index.html`);
     browserWindow.on('blur', () => {
-      if(browserWindow.webContents.isDevToolsOpened())
+      if (browserWindow.webContents.isDevToolsOpened())
         return;
       this.hide(true);
     });
@@ -81,12 +81,12 @@ module.exports = class MainWindow {
   }
 
   show(query) {
-    if(this.browserWindow === null)
+    if (this.browserWindow === null)
       return;
 
     platformUtil.saveFocus();
 
-    if(!this.browserWindow.isVisible())
+    if (!this.browserWindow.isVisible())
       windowUtil.centerWindowOnSelectedScreen(this.browserWindow, this.appPref.get('openOnActiveDisplay'));
 
     this.browserWindow.show();
@@ -94,27 +94,27 @@ module.exports = class MainWindow {
   }
 
   hide(dontRestoreFocus) {
-    if(this.browserWindow === null)
+    if (this.browserWindow === null)
       return;
     this.browserWindow.setPosition(0, -10000);
     this.browserWindow.hide();
 
-    if(!dontRestoreFocus)
+    if (!dontRestoreFocus)
       platformUtil.restoreFocus();
   }
 
   toggle(query) {
-    if(this.browserWindow === null)
+    if (this.browserWindow === null)
       return;
 
-    if(this.browserWindow.isVisible())
+    if (this.browserWindow.isVisible())
       this.hide();
     else
       this.show(query);
   }
 
   setQuery(query) {
-    if(query !== undefined)
+    if (query !== undefined)
       this.rpc.call('setQuery', query);
   }
 

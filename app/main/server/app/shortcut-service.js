@@ -1,13 +1,13 @@
 'use strict';
 
-const electron       = require('electron');
+const electron = require('electron');
 const globalShortcut = electron.globalShortcut;
-const dialog         = electron.dialog;
+const dialog = electron.dialog;
 
 module.exports = class ShortcutService {
   constructor(appService, appPref) {
     this.appService = appService;
-    this.appPref    = appPref;
+    this.appPref = appPref;
   }
 
   initializeShortcuts() {
@@ -23,22 +23,22 @@ module.exports = class ShortcutService {
 
   registerBasicToggleShortcut() {
     const shortcut = this.appPref.get('shortcut');
-    const query    = this.appPref.get('clearQuery') ? '' : undefined;
+    const query = this.appPref.get('clearQuery') ? '' : undefined;
     try {
       this._registerShortcut(shortcut, query);
-    } catch(e) {
+    } catch (e) {
       dialog.showErrorBox('Hain', `Failed to register shortcut: ${shortcut}`);
     }
   }
 
   registerCustomQueryShortcuts() {
     const customQueryShortcuts = this.appPref.get('customQueryShortcuts') || [];
-    for(const shortcutInfo of customQueryShortcuts) {
+    for (const shortcutInfo of customQueryShortcuts) {
       const shortcut = shortcutInfo.shortcut;
-      const query    = shortcutInfo.query;
+      const query = shortcutInfo.query;
       try {
         this._registerShortcut(shortcut, query);
-      } catch(e) {
+      } catch (e) {
         dialog.showErrorBox('Hain', `Failed to register shortcut: ${shortcut}`);
       }
     }
