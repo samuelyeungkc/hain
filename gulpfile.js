@@ -1,5 +1,6 @@
 'use strict';
 
+const cp = require('child_process');
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const sourcemaps = require('gulp-sourcemaps');
@@ -65,6 +66,25 @@ function buildZip(arch) {
             .pipe(gulp.dest('./out/'));
 }
 
+// Workaround to build zip file which is including symlinks
+function buildZipUsingExec(arch, platform) {
+  const filename = `hain-${platform}-${arch}-v${appPkg.version}.zip`;
+  const targetDir = `hain-${platform}-${arch}`;
+  const workingDir = path.join(__dirname, 'out', targetDir);
+  return new Promise((resolve, reject) => {
+    cp.exec(`zip --symlinks -r ../${filename} *`, {
+      cwd: workingDir
+    }, (err, stdout, stderr) => {
+      if (err) {
+        console.log(stdout);
+        console.log(stderr);
+        return reject(err);
+      }
+      return resolve();
+    });
+  });
+}
+
 function buildInstaller(arch) {
   const filename = `HainSetup-${arch}-v${appPkg.version}.exe`;
   return electronInstaller.createWindowsInstaller({
@@ -117,7 +137,8 @@ gulp.task('build-debian', ['renderer'], () => {
 });
 
 gulp.task('build-darwin', ['renderer', 'deps'], () => {
-  return build('x64', 'darwin', 'icon.icns');
+  return build('x64', 'darwin', 'icon.icns')
+    .then(() => buildZipUsingExec('x64', 'darwin'));
 });
 
 gulp.task('build-installer', ['build', 'build-zip'], () => {
@@ -131,7 +152,7 @@ gulp.task('build-chocolatey', () => {
     .pipe(gulp.dest('./out/chocolatey/'));
 });
 
-gulp.task('build-all', ['build-zip', 'build-installer', 'build-chocolatey']);
+gulp.task('build-all', ['build-zip', 'build-installer', 'build-chocolatey', 'build-darwin']);
 
 gulp.task('watch', ['renderer'], () => {
   const opts = {
