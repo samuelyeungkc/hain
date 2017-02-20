@@ -152,7 +152,7 @@ gulp.task('build-chocolatey', () => {
     .pipe(gulp.dest('./out/chocolatey/'));
 });
 
-gulp.task('build-all', ['build-zip', 'build-installer', 'build-chocolatey', 'build-darwin']);
+gulp.task('build-all', ['build-zip', 'build-installer', 'build-chocolatey']);
 
 gulp.task('watch', ['renderer'], () => {
   const opts = {
