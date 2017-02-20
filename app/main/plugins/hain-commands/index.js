@@ -115,7 +115,7 @@ module.exports = (context) => {
     }));
   }
 
-  function execute(id, payload) {
+  function execute(id, payload, extra) {
     const actions = {
       'redirect_about': () => {
         app.setQuery('/hain about');

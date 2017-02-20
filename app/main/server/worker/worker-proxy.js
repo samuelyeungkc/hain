@@ -10,8 +10,8 @@ module.exports = class WorkerProxy {
   searchAll(ticket, query) {
     this.workerClient.rpc.call('searchAll', { ticket, query });
   }
-  execute(context, id, payload) {
-    this.workerClient.rpc.call('execute', { context, id, payload });
+  execute(context, id, payload, extra) {
+    this.workerClient.rpc.call('execute', { context, id, payload, extra });
   }
   renderPreview(ticket, context, id, payload) {
     this.workerClient.rpc.call('renderPreview', { ticket, context, id, payload });

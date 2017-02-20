@@ -195,13 +195,23 @@ class AppContainer extends React.Component {
     }, CLEAR_INTERVAL);
   }
 
-  execute(item) {
+  execute(item, evt) {
     if (item === undefined)
       return;
+    const e = evt.nativeEvent;
     const params = {
       context: item.context,
       id: item.id,
-      payload: item.payload
+      payload: item.payload,
+      extra: {
+        keys: {
+          altKey: evt.nativeEvent.altKey,
+          ctrlKey: evt.nativeEvent.ctrlKey,
+          shiftKey: evt.nativeEvent.shiftKey,
+          metaKey: evt.nativeEvent.metaKey,
+          modifierBitfield: (e.ctrlKey) + (e.altKey << 1) + (e.shiftKey << 2) + (e.metaKey << 3),
+        },
+      },
     };
     rpc.call('execute', params);
   }
@@ -227,7 +237,7 @@ class AppContainer extends React.Component {
     rpc.call('renderPreview', { ticket, context, id, payload });
   }
 
-  handleSelection(selectionDelta) {
+  handleSelection(selectionDelta, evt) {
     const results = this.state.results;
     const upperSelectionIndex = results.length - 1;
 
@@ -241,7 +251,7 @@ class AppContainer extends React.Component {
     this.scrollTo(newSelectionIndex);
   }
 
-  handleEsc() {
+  handleEsc(evt) {
     const query = this.state.query;
     if (query === undefined || query.length <= 0) {
       rpc.call('close');
@@ -250,13 +260,13 @@ class AppContainer extends React.Component {
     this.setQuery('');
   }
 
-  handleEnter() {
+  handleEnter(evt) {
     const results = this.state.results;
     const selectionIndex = this.state.selectionIndex;
-    this.execute(results[selectionIndex]);
+    this.execute(results[selectionIndex], evt);
   }
 
-  handleTab() {
+  handleTab(evt) {
     const results = this.state.results;
     const selectionIndex = this.state.selectionIndex;
     const item = results[selectionIndex];
@@ -289,15 +299,15 @@ class AppContainer extends React.Component {
     const selectedHandler = keyHandlers[key];
     if (evt.ctrlKey) {
       if (selectedHandlerForCtrl !== undefined) {
-        selectedHandlerForCtrl();
+        selectedHandlerForCtrl(evt);
         evt.preventDefault();
       } else if (selectedHandler !== undefined) {
-        selectedHandler();
+        selectedHandler(evt);
         evt.preventDefault();
       }
     } else {
       if (selectedHandler !== undefined) {
-        selectedHandler();
+        selectedHandler(evt);
         evt.preventDefault();
       }
     }
@@ -315,7 +325,7 @@ class AppContainer extends React.Component {
   }
 
   handleItemClick(i, evt) {
-    this.execute(this.state.results[i]);
+    this.execute(this.state.results[i], evt);
   }
 
   handleKeyboardFocus(evt) {

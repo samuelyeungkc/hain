@@ -1,7 +1,7 @@
 {
   "extends": "airbnb-base",
   "rules": {
-    "comma-dangle": ["error", "never"],
+    "comma-dangle": ["warn", "only-multiline"],
     "no-unused-vars": "warn",
     "camelcase": "off",
     "object-shorthand": "off",
@@ -20,7 +20,9 @@
     "max-len": "off",
     "no-underscore-dangle": "off",
     "strict": "off",
-    "global-require": "off"
+    "global-require": "off",
+    "no-restricted-syntax": "off",
+    "no-multi-spaces": "off"
    },
    "env": {
      "jest": true
