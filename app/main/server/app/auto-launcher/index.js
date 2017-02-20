@@ -1,6 +1,6 @@
 'use strict';
 
-let moduleName = require('./win32');
+let moduleName = './win32';
 
 if (process.platform === 'darwin')
   moduleName = './darwin';
