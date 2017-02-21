@@ -172,7 +172,7 @@ module.exports = (workerContext) => {
     resFunc({ type: 'add', payload: indexerManager.search(query) });
   }
 
-  function execute(context, id, payload) {
+  function execute(context, id, payload, extra) {
     const isRedirect = (!context && lo_isString(payload));
     if (isRedirect) {
       workerContext.app.setQuery(payload);
@@ -180,21 +180,21 @@ module.exports = (workerContext) => {
     }
 
     if (context === IndexerManager.CONTEXT)
-      return executeOnIndexer(id, payload);
-    return executeOnPlugin(context, id, payload);
+      return executeOnIndexer(id, payload, extra);
+    return executeOnPlugin(context, id, payload, extra);
   }
 
-  function executeOnIndexer(id, payload) {
+  function executeOnIndexer(id, payload, extra) {
     const { pluginId, extraPayload } = payload;
-    indexerManager.execute(pluginId, id, extraPayload);
+    indexerManager.execute(pluginId, id, extraPayload, extra);
   }
 
-  function executeOnPlugin(pluginId, id, payload) {
+  function executeOnPlugin(pluginId, id, payload, extra) {
     const executeFunc = plugins[pluginId].execute;
     if (executeFunc === undefined)
       return;
     try {
-      executeFunc(id, payload);
+      executeFunc(id, payload, extra);
     } catch (e) {
       logger.error(e.stack || e);
     }

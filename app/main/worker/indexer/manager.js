@@ -12,7 +12,7 @@ const CONTEXT = '@indexer';
 class IndexerManager {
   constructor(localStorage) {
     this.indexers = {};
-    this.executeFunc = (pluginId, id, payload) => { };
+    this.executeFunc = (pluginId, id, payload, extra) => { };
     this.itemPriorityManager = new ItemPriorityManager(localStorage);
     this.itemPriorityManager.load();
   }
@@ -57,12 +57,12 @@ class IndexerManager {
     this.indexers[pluginId] = indexer;
     return indexer;
   }
-  execute(pluginId, id, extraPayload) {
+  execute(pluginId, id, extraPayload, extra) {
     if (!this.executeFunc) {
       logger.error('Can\'t find a execute function');
       return;
     }
-    this.executeFunc(pluginId, id, extraPayload);
+    this.executeFunc(pluginId, id, extraPayload, extra);
 
     const itemPriorityId = this.makeItemPriorityId(pluginId, id);
     this.itemPriorityManager.markItemHasExecuted(itemPriorityId);

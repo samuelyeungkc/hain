@@ -54,8 +54,8 @@ rpc.define('searchAll', (payload) => {
 });
 
 rpc.define('execute', (__payload) => {
-  const { context, id, payload } = __payload;
-  plugins.execute(context, id, payload);
+  const { context, id, payload, extra } = __payload;
+  plugins.execute(context, id, payload, extra);
 });
 
 rpc.define('renderPreview', (__payload) => {

@@ -49,7 +49,7 @@ module.exports = (context) => {
     } catch (e) { }
   }
 
-  function execute(id, payload) {
+  function execute(id, payload, extra) {
     app.setQuery(`=${payload}`);
     clipboard.writeText(payload);
     toast.enqueue(`${payload} has copied into clipboard`);

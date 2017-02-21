@@ -66,8 +66,8 @@ module.exports = class MainWindow {
       this.workerProxy.searchAll(ticket, query);
     });
     this.rpc.define('execute', (__payload) => {
-      const { context, id, payload } = __payload;
-      this.workerProxy.execute(context, id, payload);
+      const { context, id, payload, extra } = __payload;
+      this.workerProxy.execute(context, id, payload, extra);
     });
     this.rpc.define('renderPreview', (__payload) => {
       const { ticket, context, id, payload } = __payload;

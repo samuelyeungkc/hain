@@ -34,7 +34,7 @@ module.exports = (context) => {
     };
   }
 
-  function execute(id, payload) {
+  function execute(id, payload, extra) {
     const protocol_re = /https?:\/\//i;
     let url = id;
     if (protocol_re.test(url) === false) {
