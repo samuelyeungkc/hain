@@ -7,7 +7,22 @@
     NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
     if (bundle == nil)
         return nil;
-    
+
+    for (NSString *lang in [NSBundle preferredLocalizationsFromArray:[bundle localizations] forPreferences:[NSLocale preferredLanguages]]) {
+        NSString *resBundlePath = [bundle pathForResource:lang ofType:@"lproj"];
+        NSBundle *resourceBundle = [NSBundle bundleWithPath:resBundlePath];
+        if (resourceBundle == nil)
+            continue;
+
+        NSString *localizedBundleDisplayName = [resourceBundle localizedStringForKey:@"CFBundleDisplayName" value:nil table:@"InfoPlist"];
+        if (![localizedBundleDisplayName isEqualToString:@"CFBundleDisplayName"])
+            return localizedBundleDisplayName;
+        
+        NSString *localizedBundleName = [resourceBundle localizedStringForKey:@"CFBundleName" value:nil table:@"InfoPlist"];
+        if (![localizedBundleName isEqualToString:@"CFBundleName"])
+            return localizedBundleName;
+    }
+
     NSDictionary *localizedInfo = [bundle localizedInfoDictionary];
     if (localizedInfo) {
         NSString *bundleName = [self _getBundleNameFromInfoDictionary:localizedInfo];
