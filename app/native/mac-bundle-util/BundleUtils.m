@@ -25,14 +25,12 @@
 }
 
 + (NSString *)_getBundleNameFromInfoDictionary:(NSDictionary *)info {
-    NSString *bundleName = [info objectForKey:@"CFBundleName"];
-    if (bundleName)
-        return bundleName;
-    
     NSString *bundleDisplayName = [info objectForKey:@"CFBundleDisplayName"];
     if (bundleDisplayName)
         return bundleDisplayName;
-    return nil;
+
+    NSString *bundleName = [info objectForKey:@"CFBundleName"];
+    return bundleName;
 }
 
 + (BOOL)saveApplicationIconAsPngWithPath:(NSString *)bundlePath pngPath:(NSString *)pngPath {
