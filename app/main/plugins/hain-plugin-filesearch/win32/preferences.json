@@ -36,7 +36,8 @@
         ".appref-ms",
         ".exe",
         ".lnk",
-        ".bat"
+        ".bat",
+        ".url"
       ]
     }
   }
