@@ -38,6 +38,7 @@ function build(arch, platform, icon) {
   return new Promise((resolve, reject) => {
     packager({
       arch,
+      name: 'Hain',
       dir: path.join(__dirname, 'app'),
       platform: platform || 'win32',
       asar: true,
