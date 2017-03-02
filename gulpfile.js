@@ -68,12 +68,12 @@ function buildZip(arch) {
 }
 
 // Workaround to build zip file which is including symlinks
-function buildZipUsingExec(arch, platform) {
+function buildZipUsingExec(arch, platform, filesToCompress) {
   const filename = `hain-${platform}-${arch}-v${appPkg.version}.zip`;
-  const targetDir = `hain-${platform}-${arch}`;
+  const targetDir = `Hain-${platform}-${arch}`;
   const workingDir = path.join(__dirname, 'out', targetDir);
   return new Promise((resolve, reject) => {
-    cp.exec(`zip --symlinks -r ../${filename} *`, {
+    cp.exec(`zip --symlinks -r ../${filename} ${filesToCompress}`, {
       cwd: workingDir
     }, (err, stdout, stderr) => {
       if (err) {
@@ -139,7 +139,7 @@ gulp.task('build-debian', ['renderer'], () => {
 
 gulp.task('build-darwin', ['renderer', 'deps'], () => {
   return build('x64', 'darwin', 'icon.icns')
-    .then(() => buildZipUsingExec('x64', 'darwin'));
+    .then(() => buildZipUsingExec('x64', 'darwin', '*.app'));
 });
 
 gulp.task('build-installer', ['build', 'build-zip'], () => {
