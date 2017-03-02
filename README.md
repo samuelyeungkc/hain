@@ -20,12 +20,6 @@ so, I made it.
 
 Go to [Releases](https://github.com/appetizermonster/Hain/releases), then you can download prebuilt binaries.
 
-Alternatively, you can install Hain from the command prompt via [Chocolatey](https://chocolatey.org/packages/Hain):
-
-```ps
-cinst Hain -pre
-```
-
 ## Usage
 Run and press `alt+space` anywhere
 
@@ -50,16 +44,24 @@ npm install
 npm run dev
 ```
 
-### Build from Source
+## Build from Source
+
+### Windows
 
 ```shell
 npm run build
 ```
 
-### Build from Source a deb package for Linux
+### Linux
 
 ```shell
 npm run build-debian
+```
+
+### macOS
+
+```shell
+gulp build-darwin
 ```
 
 ## Contributing
