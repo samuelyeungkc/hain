@@ -44,21 +44,19 @@ npm install
 npm run dev
 ```
 
-## Build from Source
-
-### Windows
+### Build for Windows
 
 ```shell
 npm run build
 ```
 
-### Linux
+### Build for Linux
 
 ```shell
 npm run build-debian
 ```
 
-### macOS
+### Build for macOS
 
 ```shell
 gulp build-darwin
