@@ -11,6 +11,11 @@ so, I made it.
   <img src="docs/images/demo.gif" width="600"/>
 </p>
 
+## Vision
+
+It's a launcher with strict syntax (like terminal programs), it's not targeting to interpret natrual language.  
+I believe the strict syntax can provide more powerful and fast response than to interpret natural language.
+
 ## Features
 
 * Searching Executable files very fast with Fuzzy Matching
