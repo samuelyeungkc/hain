@@ -12,7 +12,7 @@
   "author": "Heejin Lee <monster@teamappetizer.com>",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^1.4.15",
+    "electron": "1.4.13",
     "electron-packager": "^8.5.1",
     "electron-winstaller": "^2.5.2",
     "babel-cli": "^6.23.0",
