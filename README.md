@@ -23,20 +23,20 @@ I believe the strict syntax can provide more powerful and fast response than to 
 
 ## Downloads
 
-Go to [Releases](https://github.com/appetizermonster/Hain/releases), then you can download prebuilt binaries.
+Go to [Releases](https://github.com/hainproject/hain/releases), then you can download prebuilt binaries.
 
 ## Usage
 Run and press `alt+space` anywhere
 
 ## How to make Plugins
 
-See [Plugin Documentation](http://appetizermonster.github.io/hain/docs/)
+See [Plugin Documentation](http://hainproject.github.io/hain/docs/)
 
 ## Install/Build from Source
 
 ```shell
 # Clone this repo
-git clone https://github.com/appetizermonster/hain.git
+git clone https://github.com/hainproject/hain.git
 # Go into the repo
 cd hain
 # Install dependencies

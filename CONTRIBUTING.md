@@ -15,7 +15,7 @@ When opening an issue, please go by the following:
 After forking and cloning your fork to a local machine, run the following:
 ```
 $ cd <path-to-clone>
-$ git remote add upstream https://github.com/appetizermonster/hain.git
+$ git remote add upstream https://github.com/hainproject/hain.git
 $ git pull upstream develop
 $ git checkout develop
 $ git branch <your-feature-branch>

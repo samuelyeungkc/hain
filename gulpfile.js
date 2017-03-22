@@ -93,7 +93,7 @@ function buildInstaller(arch) {
     outputDirectory: `./out/${arch}`,
     authors: 'Heejin Lee',
     title: 'Hain',
-    iconUrl: 'https://raw.githubusercontent.com/appetizermonster/Hain/master/build/icon.ico',
+    iconUrl: 'https://raw.githubusercontent.com/hainproject/Hain/master/build/icon.ico',
     setupIcon: path.resolve('./build/icon.ico'),
     loadingGif: path.resolve('./build/installer.gif'),
     skipUpdateIcon: true, // HACK to resolve rcedit error (electron-winstaller)

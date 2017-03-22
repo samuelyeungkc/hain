@@ -3,7 +3,7 @@
 const got = require('got');
 
 function checkForUpdate() {
-  const url = 'https://api.github.com/repos/appetizermonster/hain/releases';
+  const url = 'https://api.github.com/repos/hainproject/hain/releases';
   return got(url, {
     headers: {
       Accept: 'application/vnd.github.v3+json'

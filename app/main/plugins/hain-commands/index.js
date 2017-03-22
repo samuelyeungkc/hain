@@ -5,7 +5,7 @@ const lo_assign = require('lodash.assign');
 const pkg = require('../../../package.json');
 const checkForUpdate = require('./check-update');
 
-const CONTRIBUTORS_URL = 'https://github.com/appetizermonster/hain/graphs/contributors';
+const CONTRIBUTORS_URL = 'https://github.com/hainproject/hain/graphs/contributors';
 const NAME = 'hain-commands';
 
 const commands = [
