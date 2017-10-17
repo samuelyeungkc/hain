@@ -7,7 +7,7 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
 const logger = require('../shared/logger');
-const iconFmt = require('./icon-fmt');
+const iconFmt = require('./utils/icon-fmt');
 const conf = require('../conf');
 
 module.exports = () => {
@@ -53,9 +53,12 @@ module.exports = () => {
     try {
       const packageJson = require(path.join(pluginFile, 'package.json'));
       const prefSchemaPath = path.join(pluginFile, 'preferences.json');
+      const prefSchemaFallbackPath = path.join(pluginFile, 'preferences.js');
       let prefSchema = null;
       if (fs.existsSync(prefSchemaPath))
         prefSchema = require(prefSchemaPath);
+      else if (fs.existsSync(prefSchemaFallbackPath))
+        prefSchema = require(prefSchemaFallbackPath);
 
       const hainProps = packageJson.hain;
       if (hainProps) {
@@ -70,7 +73,8 @@ module.exports = () => {
       pluginConfig.name = packageJson.name;
       pluginConfig.version = packageJson.version;
     } catch (e) {
-      logger.error(`${pluginId} package.json error`);
+      logger.error(`error on loading ${pluginId} config`);
+      logger.error(e);
       return null;
     }
     return pluginConfig;

@@ -54,22 +54,22 @@ rpc.define('searchAll', (payload) => {
 });
 
 rpc.define('execute', (__payload) => {
-  const { pluginId, id, payload } = __payload;
-  plugins.execute(pluginId, id, payload);
+  const { context, id, payload, extra } = __payload;
+  plugins.execute(context, id, payload, extra);
 });
 
 rpc.define('renderPreview', (__payload) => {
-  const { ticket, pluginId, id, payload } = __payload;
+  const { ticket, context, id, payload } = __payload;
   const render = (html) => {
     const previewData = { ticket, html };
     rpc.call('requestRenderPreview', previewData);
   };
-  plugins.renderPreview(pluginId, id, payload, render);
+  plugins.renderPreview(context, id, payload, render);
 });
 
 rpc.define('buttonAction', (__payload) => {
-  const { pluginId, id, payload } = __payload;
-  plugins.buttonAction(pluginId, id, payload);
+  const { context, id, payload } = __payload;
+  plugins.buttonAction(context, id, payload);
 });
 
 // preferences

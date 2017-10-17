@@ -5,8 +5,8 @@ const storage = require('node-persist');
 
 const conf = require('../conf');
 
-function createPluginLocalStorage(pluginId) {
-  const localStorageDir = `${conf.LOCAL_STORAGE_DIR}/${pluginId}`;
+function createLocalStorage(context) {
+  const localStorageDir = `${conf.LOCAL_STORAGE_DIR}/${context}`;
   fse.ensureDirSync(localStorageDir);
 
   const localStorage = storage.create({
@@ -17,5 +17,5 @@ function createPluginLocalStorage(pluginId) {
 }
 
 module.exports = {
-  createPluginLocalStorage
+  createLocalStorage
 };

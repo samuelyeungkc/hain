@@ -18,7 +18,7 @@ function makeProxy(moduleName, functions) {
   return proxy;
 }
 
-const app = makeProxy('app', ['restart', 'quit', 'open', 'close', 'setInput', 'setQuery', 'openPreferences', 'reloadPlugins']);
+const app = makeProxy('app', ['restart', 'quit', 'open', 'close', 'setInput', 'setQuery', 'openPreferences', 'reloadPlugins', 'setSelectionIndex']);
 const clipboard = makeProxy('clipboard', ['readText', 'writeText', 'readHTML', 'writeHTML', 'clear']);
 const toast = makeProxy('toast', ['enqueue']);
 const shell = makeProxy('shell', ['showItemInFolder', 'openItem', 'openExternal']);

@@ -6,7 +6,7 @@ const cryptoUtil = require('../crypto-util');
 describe('json-schema-encoder.js', () => {
   describe('parse', () => {
     it('should parse encrypted password properties with given encryption key', () => {
-      const key = cryptoUtil.generateKey();
+      const key = 'testkey1';
       const contents = 'thisistestcontents';
       const schema = {
         type: 'object',
@@ -27,7 +27,7 @@ describe('json-schema-encoder.js', () => {
     });
 
     it('should parse nested schema correctly', () => {
-      const key = cryptoUtil.generateKey();
+      const key = 'testkey2';
       const schema = {
         type: 'object',
         properties: {
@@ -94,7 +94,7 @@ describe('json-schema-encoder.js', () => {
 
   describe('stringify', () => {
     it('should encrypt password properties with given encryption key', () => {
-      const key = cryptoUtil.generateKey();
+      const key = 'testkey3';
       const schema = {
         type: 'object',
         properties: {

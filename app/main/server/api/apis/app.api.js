@@ -25,4 +25,7 @@ module.exports = class AppAPI {
   reloadPlugins() {
     this.appService.reloadPlugins();
   }
+  setSelectionIndex(selId) {
+    this.appService.setSelectionIndex(selId);
+  }
 };

@@ -14,6 +14,7 @@ const TrayService = require('./ui/tray-service');
 const firstLaunch = require('./first-launch');
 const ShortcutService = require('./shortcut-service');
 const iconProtocol = require('./icon-protocol');
+const appIconProtocol = require('./app-icon-protocol');
 const logger = require('../../shared/logger');
 
 const AutoLauncher = require('./auto-launcher');
@@ -30,7 +31,7 @@ module.exports = class AppService {
     this.workerClient = workerClient;
     this.workerProxy = workerProxy;
 
-    this.mainWindow = new MainWindow(workerProxy);
+    this.mainWindow = new MainWindow(workerProxy, prefManager.appPref);
     this.prefWindow = new PrefWindow(prefManager);
     this.trayService = new TrayService(this, autoLauncher);
     this.shortcutService = new ShortcutService(this, prefManager.appPref);
@@ -42,7 +43,7 @@ module.exports = class AppService {
         autoLauncher.enable();
 
       const isRestarted = (lo_includes(process.argv, '--restarted'));
-      const silentLaunch = (lo_includes(process.argv, '--silent'));
+      const silentLaunch = (lo_includes(process.argv, '--silent') || autoLauncher.isLaunchedAtLogin());
       const shouldQuit = electronApp.makeSingleInstance((cmdLine, workingDir) => {
         if (self._isRestarting)
           return;
@@ -63,7 +64,12 @@ module.exports = class AppService {
 
         self.trayService.createTray();
         iconProtocol.register();
+        appIconProtocol.register();
       });
+
+      // Hide dock icon for macOS
+      if (process.platform === 'darwin')
+        electronApp.dock.hide();
     }).catch((err) => {
       logger.error(err);
     });
@@ -94,9 +100,14 @@ module.exports = class AppService {
     this.prefWindow.show(prefId);
   }
   reloadPlugins() {
-    this.workerClient.reloadWorker();
+    this.workerClient.reload();
     this.workerProxy.initialize(this.prefManager.appPref.get());
     this.mainWindow.setQuery('');
     this.mainWindow.notifyPluginsReloading();
+  }
+  setSelectionIndex(selId) {
+    this.mainWindow.show();
+    if (selId !== undefined)
+      this.mainWindow.setSelectionIndex(selId);
   }
 };

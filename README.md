@@ -11,6 +11,11 @@ so, I made it.
   <img src="docs/images/demo.gif" width="600"/>
 </p>
 
+## Vision
+
+It's a launcher with strict syntax (like terminal programs), it's not targeting to interpret natrual language.  
+I believe the strict syntax can provide more powerful and fast response than to interpret natural language.
+
 ## Features
 
 * Searching Executable files very fast with Fuzzy Matching
@@ -18,26 +23,20 @@ so, I made it.
 
 ## Downloads
 
-Go to [Releases](https://github.com/appetizermonster/Hain/releases), then you can download prebuilt binaries.
-
-Alternatively, you can install Hain from the command prompt via [Chocolatey](https://chocolatey.org/packages/Hain):
-
-```ps
-cinst Hain -pre
-```
+Go to [Releases](https://github.com/hainproject/hain/releases), then you can download prebuilt binaries.
 
 ## Usage
 Run and press `alt+space` anywhere
 
 ## How to make Plugins
 
-See [Plugin Documentation](http://appetizermonster.github.io/hain/docs/)
+See [Plugin Documentation](http://hainproject.github.io/hain/docs/)
 
 ## Install/Build from Source
 
 ```shell
 # Clone this repo
-git clone https://github.com/appetizermonster/hain.git
+git clone https://github.com/hainproject/hain.git
 # Go into the repo
 cd hain
 # Install dependencies
@@ -50,10 +49,22 @@ npm install
 npm run dev
 ```
 
-### Build from Source
+### Build for Windows
 
 ```shell
 npm run build
+```
+
+### Build for Linux
+
+```shell
+npm run build-debian
+```
+
+### Build for macOS
+
+```shell
+gulp build-darwin
 ```
 
 ## Contributing

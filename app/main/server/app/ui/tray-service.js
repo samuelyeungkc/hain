@@ -25,10 +25,8 @@ module.exports = class TrayService {
     });
   }
   _createTray() {
-    const iconPath = process.platform !== 'linux' ?
-      path.normalize(`${__dirname}/../../../../images/tray_16.ico`) :
-      path.normalize(`${__dirname}/../../../../images/hain.png`);
-
+    const iconFile = process.platform === 'win32' ? 'tray_16.ico' : 'menubar.png';
+    const iconPath = path.normalize(`${__dirname}/../../../../images/${iconFile}`);
     const tray = new Tray(iconPath);
     const menu = Menu.buildFromTemplate([
       {

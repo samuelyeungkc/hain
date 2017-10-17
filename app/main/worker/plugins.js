@@ -1,117 +1,29 @@
-/* global process */
 'use strict';
 
-const lo_isNumber = require('lodash.isnumber');
-const lo_isArray = require('lodash.isarray');
 const lo_assign = require('lodash.assign');
-const lo_isPlainObject = require('lodash.isplainobject');
 const lo_isFunction = require('lodash.isfunction');
 const lo_reject = require('lodash.reject');
 const lo_keys = require('lodash.keys');
-
-const co = require('co');
-const fs = require('fs');
-const fse = require('fs-extra');
-const path = require('path');
-const fileUtil = require('../shared/file-util');
+const lo_isString = require('lodash.isstring');
 
 const matchUtil = require('../shared/match-util');
-const textUtil = require('../shared/text-util');
 const logger = require('../shared/logger');
-const iconFmt = require('./icon-fmt');
 const prefStore = require('./pref-store');
-const storages = require('./storages');
+const storageManager = require('./storage-manager');
+const IndexerManager = require('./indexer/manager');
 const PreferencesObject = require('../shared/preferences-object');
+const helpUtil = require('./utils/help-util');
+const responseUtil = require('./utils/response-util');
+const pluginInstaller = require('./plugin-installer');
 
 const conf = require('../conf');
 
-function createSanitizeSearchResultFunc(pluginId, pluginConfig) {
-  return (x) => {
-    const defaultScore = 0.5;
-    let _score = x.score;
-    if (!lo_isNumber(_score))
-      _score = defaultScore;
-    _score = Math.max(0, Math.min(_score, 1)); // clamp01(x.score)
-
-    const _icon = x.icon ? iconFmt.parse(pluginConfig.path, x.icon) : null;
-    const _title = textUtil.sanitize(x.title);
-    const _desc = textUtil.sanitize(x.desc);
-    const _group = x.group;
-    const _preview = x.preview;
-    const sanitizedProps = {
-      pluginId: pluginId,
-      title: _title,
-      desc: _desc,
-      score: _score,
-      icon: _icon || pluginConfig.icon,
-      group: _group || pluginConfig.group,
-      preview: _preview || false
-    };
-    return lo_assign(x, sanitizedProps);
-  };
-}
-
-function createResponseObject(resFunc, pluginId, pluginConfig) {
-  const sanitizeSearchResult = createSanitizeSearchResultFunc(pluginId, pluginConfig);
-  return {
-    add: (result) => {
-      let searchResults = [];
-      if (lo_isArray(result)) {
-        searchResults = result.map(sanitizeSearchResult);
-      } else if (lo_isPlainObject(result)) {
-        searchResults = [sanitizeSearchResult(result)];
-      } else {
-        throw new Error('argument must be an array or an object');
-      }
-      if (searchResults.length <= 0)
-        return;
-      resFunc({
-        type: 'add',
-        payload: searchResults
-      });
-    },
-    remove: (id) => {
-      resFunc({
-        type: 'remove',
-        payload: { id, pluginId }
-      });
-    }
-  };
-}
-
-function _makeIntroHelp(pluginConfig) {
-  const usage = pluginConfig.usage || 'please fill usage in package.json';
-  return [{
-    redirect: pluginConfig.redirect,
-    payload: pluginConfig.redirect,
-    title: textUtil.sanitize(usage),
-    desc: textUtil.sanitize(pluginConfig.name),
-    icon: pluginConfig.icon,
-    group: 'Plugins',
-    score: Math.random()
-  }];
-}
-
-function _makePrefixHelp(pluginConfig, query) {
-  if (!pluginConfig.prefix) return;
-  const candidates = [pluginConfig.prefix];
-  const filtered = matchUtil.head(candidates, query);
-  return filtered.map((x) => {
-    return {
-      redirect: pluginConfig.redirect,
-      payload: pluginConfig.redirect,
-      title: textUtil.sanitize(matchUtil.makeStringBoldHtml(x.elem, x.matches)),
-      desc: textUtil.sanitize(pluginConfig.name),
-      group: 'Plugin Commands',
-      icon: pluginConfig.icon,
-      score: 0.5
-    };
-  });
-}
+const PLUGIN_QUERY_PREFIX_REGEX = /^[?@=\\/#]/;
 
 module.exports = (workerContext) => {
   const pluginLoader = require('./plugin-loader')();
 
+  let indexerManager = null;
   let plugins = null;
   let pluginConfigs = null;
   let pluginPrefIds = null;
@@ -140,20 +52,50 @@ module.exports = (workerContext) => {
     matchutil: matchUtil
   };
 
-  function generatePluginContext(pluginId, pluginConfig) {
-    const localStorage = storages.createPluginLocalStorage(pluginId);
-    let preferences = undefined;
+	function createLogger(pluginId) {
+		let prefix = `[${pluginId.replace(/hain-(plugin-)?/, '')}] `;
+		return {
+			log: (...args) => {
+				if(typeof args[0] === 'string')
+					args[0] = prefix + args[0];
+				else
+					args.unshift(prefix);
 
+				workerContext.logger.log(...args);
+			}
+		};
+	}
+
+	function generatePluginContext(pluginId, pluginConfig) {
+    const localContext = {
+      localStorage: storageManager.createLocalStorage(pluginId),
+      indexer: indexerManager.createIndexerForPlugin(pluginId, pluginConfig.icon),
+			logger: createLogger(pluginId),
+    };
     const hasPreferences = (pluginConfig.prefSchema !== null);
     if (hasPreferences) {
-      preferences = new PreferencesObject(prefStore, pluginId, pluginConfig.prefSchema);
+      const preferences = new PreferencesObject(prefStore, pluginId, pluginConfig.prefSchema);
+      localContext.preferences = preferences;
       prefObjs[pluginId] = preferences;
     }
-    return lo_assign({}, pluginContextBase, { localStorage, preferences });
+    return lo_assign({}, pluginContextBase, localContext);
   }
 
-  function _startup() {
-    logger.debug('startup: begin');
+  function* initialize() {
+    yield pluginInstaller.installPreinstalledPlugins();
+
+    setupIndexerManager();
+
+    const ret = pluginLoader.loadPlugins(generatePluginContext);
+    plugins = ret.plugins;
+    pluginConfigs = ret.pluginConfigs;
+    pluginPrefIds = lo_reject(lo_keys(pluginConfigs), x => pluginConfigs[x].prefSchema === null);
+
+    callPluginsStartup();
+  }
+
+  function callPluginsStartup() {
+    logger.debug('callPluginsStartup: begin');
     for (const prop in plugins) {
       logger.debug(`startup: ${prop}`);
       const startupFunc = plugins[prop].startup;
@@ -167,132 +109,101 @@ module.exports = (workerContext) => {
         logger.error(e.stack || e);
       }
     }
-    logger.debug('startup: end');
+    logger.debug('callPluginsStartup: end');
   }
 
-  function removeUninstalledPlugins(listFile, removeData) {
-    if (!fs.existsSync(listFile))
+  function setupIndexerManager() {
+    indexerManager = new IndexerManager(storageManager.createLocalStorage('indexer'));
+    indexerManager.setExecuteFunction(executeOnPlugin);
+  }
+
+  function searchAll(query, resFunc) {
+    const noQuery = (query.length <= 0);
+    if (noQuery) {
+      resFunc({ type: 'add', payload: helpUtil.createIntroHelp(pluginConfigs) });
       return;
-
-    try {
-      const contents = fs.readFileSync(listFile, { encoding: 'utf8' });
-      const targetPlugins = contents.split('\n').filter((val) => (val && val.trim().length > 0));
-
-      for (const packageName of targetPlugins) {
-        const packageDir = path.join(conf.MAIN_PLUGIN_REPO, packageName);
-        fse.removeSync(packageDir);
-
-        if (removeData) {
-          const storageDir = path.join(conf.LOCAL_STORAGE_DIR, packageName);
-          const prefFile = path.join(conf.PLUGIN_PREF_DIR, packageName);
-          fse.removeSync(storageDir);
-          fse.removeSync(prefFile);
-        }
-
-        logger.debug(`${packageName} has uninstalled successfully`);
-      }
-      fse.removeSync(listFile);
-    } catch (e) {
-      logger.error(`plugin uninstall error: ${e.stack || e}`);
     }
+
+    const isPluginQuery = PLUGIN_QUERY_PREFIX_REGEX.test(query);
+    if (isPluginQuery)
+      searchPlugins(query, resFunc);
+    else
+      searchIndexer(query, resFunc);
   }
 
-  function movePreinstalledPlugins() {
-    return co(function* () {
-      const preinstallDir = conf.__PLUGIN_PREINSTALL_DIR;
-      if (!fs.existsSync(preinstallDir))
-        return;
-
-      const packageDirs = fs.readdirSync(preinstallDir);
-      const repoDir = conf.MAIN_PLUGIN_REPO;
-      for (const packageName of packageDirs) {
-        const srcPath = path.join(preinstallDir, packageName);
-        const destPath = path.join(repoDir, packageName);
-        yield fileUtil.move(srcPath, destPath);
-        logger.debug(`${packageName} has installed successfully`);
-      }
-    }).catch((err) => {
-      logger.error(`plugin uninstall error: ${err.stack || err}`);
-    });
-  }
-
-  function* initialize() {
-    removeUninstalledPlugins(conf.__PLUGIN_UNINSTALL_LIST_FILE, true);
-    removeUninstalledPlugins(conf.__PLUGIN_UPDATE_LIST_FILE, false);
-    yield movePreinstalledPlugins();
-
-    const ret = pluginLoader.loadPlugins(generatePluginContext);
-    plugins = ret.plugins;
-    pluginConfigs = ret.pluginConfigs;
-    pluginPrefIds = lo_reject(lo_keys(pluginConfigs), x => pluginConfigs[x].prefSchema === null);
-
-    _startup();
-  }
-
-  function searchAll(query, res) {
-    let sysResults = [];
-
+  function searchPlugins(query, resFunc) {
+    const sysResults = [];
     for (const prop in plugins) {
       const pluginId = prop;
       const plugin = plugins[pluginId];
       const pluginConfig = pluginConfigs[pluginId];
+      const hasPrefix = (lo_isString(pluginConfig.prefix) && pluginConfig.prefix.length > 0);
+      if (!hasPrefix)
+        continue;
 
-      if (query.length === 0) {
-        const help = _makeIntroHelp(pluginConfig);
-        if (help && help.length > 0)
-          sysResults = sysResults.concat(help);
+      const query_lower = query.toLowerCase();
+      const prefix_lower = pluginConfig.prefix.toLowerCase();
+
+      if (query_lower.startsWith(prefix_lower) === false) {
+        const prefixHelp = helpUtil.makePrefixHelp(pluginConfig, query);
+        if (prefixHelp && prefixHelp.length > 0)
+          sysResults.push(...prefixHelp);
         continue;
       }
 
-      let _query = query;
-      const _query_lower = query.toLowerCase();
-      const _prefix = pluginConfig.prefix;
+      const noSearchFunc = !plugin.search;
+      if (noSearchFunc)
+        continue;
 
-      if (_prefix /* != null || != undefined */) {
-        const prefix_lower = _prefix.toLowerCase();
-        if (_query_lower.startsWith(prefix_lower) === false) {
-          const prefixHelp = _makePrefixHelp(pluginConfig, query);
-          if (prefixHelp && prefixHelp.length > 0)
-            sysResults = sysResults.concat(prefixHelp);
-          continue;
-        }
-        _query = _query.substring(_prefix.length);
-      }
-
-      const pluginResponse = createResponseObject(res, pluginId, pluginConfig);
+      const localQuery = query.substring(prefix_lower.length);
+      const pluginResponse = responseUtil.createResponseObject(resFunc, pluginId, pluginConfig);
       try {
-        plugin.search(_query, pluginResponse);
+        plugin.search(localQuery, pluginResponse);
       } catch (e) {
         logger.error(e.stack || e);
       }
     }
-
     // Send System-generated Results
     if (sysResults.length > 0)
-      res({ type: 'add', payload: sysResults });
+      resFunc({ type: 'add', payload: sysResults });
   }
 
-  function execute(pluginId, id, payload) {
-    if (plugins[pluginId] === undefined) {
-      if (payload)
-        workerContext.app.setQuery(payload);
+  function searchIndexer(query, resFunc) {
+    resFunc({ type: 'add', payload: indexerManager.search(query) });
+  }
+
+  function execute(context, id, payload, extra) {
+    const isRedirect = (!context && lo_isString(payload));
+    if (isRedirect) {
+      workerContext.app.setQuery(payload);
       return;
     }
 
+    if (context === IndexerManager.CONTEXT)
+      return executeOnIndexer(id, payload, extra);
+    return executeOnPlugin(context, id, payload, extra);
+  }
+
+  function executeOnIndexer(id, payload, extra) {
+    const { pluginId, extraPayload } = payload;
+    indexerManager.execute(pluginId, id, extraPayload, extra);
+  }
+
+  function executeOnPlugin(pluginId, id, payload, extra) {
     const executeFunc = plugins[pluginId].execute;
     if (executeFunc === undefined)
       return;
     try {
-      executeFunc(id, payload);
+      executeFunc(id, payload, extra);
     } catch (e) {
       logger.error(e.stack || e);
     }
   }
 
-  function renderPreview(pluginId, id, payload, render) {
-    if (plugins[pluginId] === undefined)
+  function renderPreview(context, id, payload, render) {
+    if (plugins[context] === undefined)
       return;
-    const renderPreviewFunc = plugins[pluginId].renderPreview;
+    const renderPreviewFunc = plugins[context].renderPreview;
     if (renderPreviewFunc === undefined)
       return;
     try {
@@ -302,10 +213,10 @@ module.exports = (workerContext) => {
     }
   }
 
-  function buttonAction(pluginId, id, payload) {
-    if (plugins[pluginId] === undefined)
+  function buttonAction(context, id, payload) {
+    if (plugins[context] === undefined)
       return;
-    const buttonActionFunc = plugins[pluginId].buttonAction;
+    const buttonActionFunc = plugins[context].buttonAction;
     if (buttonActionFunc === undefined)
       return;
     try {

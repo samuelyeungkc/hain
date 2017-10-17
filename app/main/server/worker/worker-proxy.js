@@ -10,14 +10,14 @@ module.exports = class WorkerProxy {
   searchAll(ticket, query) {
     this.workerClient.rpc.call('searchAll', { ticket, query });
   }
-  execute(pluginId, id, payload) {
-    this.workerClient.rpc.call('execute', { pluginId, id, payload });
+  execute(context, id, payload, extra) {
+    this.workerClient.rpc.call('execute', { context, id, payload, extra });
   }
-  renderPreview(ticket, pluginId, id, payload) {
-    this.workerClient.rpc.call('renderPreview', { ticket, pluginId, id, payload });
+  renderPreview(ticket, context, id, payload) {
+    this.workerClient.rpc.call('renderPreview', { ticket, context, id, payload });
   }
-  buttonAction(pluginId, id, payload) {
-    this.workerClient.rpc.call('buttonAction', { pluginId, id, payload });
+  buttonAction(context, id, payload) {
+    this.workerClient.rpc.call('buttonAction', { context, id, payload });
   }
   getPluginPrefIds() {
     return this.workerClient.rpc.call('getPluginPrefIds');

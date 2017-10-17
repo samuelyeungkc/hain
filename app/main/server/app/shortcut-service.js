@@ -9,15 +9,18 @@ module.exports = class ShortcutService {
     this.appService = appService;
     this.appPref = appPref;
   }
+
   initializeShortcuts() {
     this.updateShortcuts();
     this.appPref.on('update', this.updateShortcuts.bind(this));
   }
+
   updateShortcuts() {
     this.clearShortcut();
     this.registerBasicToggleShortcut();
     this.registerCustomQueryShortcuts();
   }
+
   registerBasicToggleShortcut() {
     const shortcut = this.appPref.get('shortcut');
     const query = this.appPref.get('clearQuery') ? '' : undefined;
@@ -27,6 +30,7 @@ module.exports = class ShortcutService {
       dialog.showErrorBox('Hain', `Failed to register shortcut: ${shortcut}`);
     }
   }
+
   registerCustomQueryShortcuts() {
     const customQueryShortcuts = this.appPref.get('customQueryShortcuts') || [];
     for (const shortcutInfo of customQueryShortcuts) {
@@ -39,12 +43,14 @@ module.exports = class ShortcutService {
       }
     }
   }
+
   clearShortcut() {
     globalShortcut.unregisterAll();
   }
+
   _registerShortcut(shortcut, query) {
     globalShortcut.register(shortcut, () => {
-      this.appService.mainWindow.toggle(query);
+      this.appService.mainWindow.show(query);
     });
   }
 };

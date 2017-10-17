@@ -76,11 +76,11 @@ class AppContainer extends React.Component {
 
   componentDidMount() {
     this.refs.query.focus();
-    rpc.define('notifyPluginsLoaded', (payload) => {
+    rpc.define('notifyPluginsLoaded', () => {
       this.isLoaded = true;
       this.setQuery('');
     });
-    rpc.define('notifyPluginsReloading', (payload) => {
+    rpc.define('notifyPluginsReloading', () => {
       this.isLoaded = false;
       this.forceUpdate();
     });
@@ -89,10 +89,13 @@ class AppContainer extends React.Component {
       this.toastQueue.push({ message, duration });
     });
     rpc.define('log', (payload) => {
-      console.log(payload);
+      console.log(...payload);
     });
     rpc.define('setQuery', (payload) => {
       this.setQuery(payload);
+    });
+    rpc.define('setSelectionIndex', (payload) => {
+      this.setSelectionIndex(payload);
     });
     rpc.define('requestAddResults', (__payload) => {
       const { ticket, type, payload } = __payload;
@@ -125,7 +128,7 @@ class AppContainer extends React.Component {
       } else if (type === 'remove') {
         const _id = payload.id;
         results = lo_reject(results, (x) => {
-          return (x.id === _id && x.pluginId === payload.pluginId);
+          return (x.id === _id && x.context === payload.context);
         });
       }
 
@@ -151,6 +154,12 @@ class AppContainer extends React.Component {
     this.setState({ query: _query, selectionIndex: 0 });
     this.refs.query.focus();
     this.search(_query);
+  }
+
+  setSelectionIndex(selId) {
+    const _selId = selId || 0;
+    this.setState({ selectionIndex: _selId });
+    this.scrollTo(_selId);
   }
 
   scrollTo(selectionIndex) {
@@ -186,13 +195,23 @@ class AppContainer extends React.Component {
     }, CLEAR_INTERVAL);
   }
 
-  execute(item) {
+  execute(item, evt) {
     if (item === undefined)
       return;
+    const e = evt.nativeEvent;
     const params = {
-      pluginId: item.pluginId,
+      context: item.context,
       id: item.id,
-      payload: item.payload
+      payload: item.payload,
+      extra: {
+        keys: {
+          altKey: evt.nativeEvent.altKey,
+          ctrlKey: evt.nativeEvent.ctrlKey,
+          shiftKey: evt.nativeEvent.shiftKey,
+          metaKey: evt.nativeEvent.metaKey,
+          modifierBitfield: (e.ctrlKey) + (e.altKey << 1) + (e.shiftKey << 2) + (e.metaKey << 3),
+        },
+      },
     };
     rpc.call('execute', params);
   }
@@ -205,20 +224,20 @@ class AppContainer extends React.Component {
       return;
     }
 
-    const pluginId = selectedResult.pluginId;
+    const context = selectedResult.context;
     const id = selectedResult.id;
     const payload = selectedResult.payload;
-    const previewHash = `${pluginId}.${id}`;
+    const previewHash = `${context}.${id}`;
 
     if (previewHash === this._renderedPreviewHash)
       return;
     this._renderedPreviewHash = previewHash;
 
     const ticket = previewTicket.newTicket();
-    rpc.call('renderPreview', { ticket, pluginId, id, payload });
+    rpc.call('renderPreview', { ticket, context, id, payload });
   }
 
-  handleSelection(selectionDelta) {
+  handleSelection(selectionDelta, evt) {
     const results = this.state.results;
     const upperSelectionIndex = results.length - 1;
 
@@ -232,7 +251,7 @@ class AppContainer extends React.Component {
     this.scrollTo(newSelectionIndex);
   }
 
-  handleEsc() {
+  handleEsc(evt) {
     const query = this.state.query;
     if (query === undefined || query.length <= 0) {
       rpc.call('close');
@@ -241,13 +260,13 @@ class AppContainer extends React.Component {
     this.setQuery('');
   }
 
-  handleEnter() {
+  handleEnter(evt) {
     const results = this.state.results;
     const selectionIndex = this.state.selectionIndex;
-    this.execute(results[selectionIndex]);
+    this.execute(results[selectionIndex], evt);
   }
 
-  handleTab() {
+  handleTab(evt) {
     const results = this.state.results;
     const selectionIndex = this.state.selectionIndex;
     const item = results[selectionIndex];
@@ -280,15 +299,15 @@ class AppContainer extends React.Component {
     const selectedHandler = keyHandlers[key];
     if (evt.ctrlKey) {
       if (selectedHandlerForCtrl !== undefined) {
-        selectedHandlerForCtrl();
+        selectedHandlerForCtrl(evt);
         evt.preventDefault();
       } else if (selectedHandler !== undefined) {
-        selectedHandler();
+        selectedHandler(evt);
         evt.preventDefault();
       }
     } else {
       if (selectedHandler !== undefined) {
-        selectedHandler();
+        selectedHandler(evt);
         evt.preventDefault();
       }
     }
@@ -306,7 +325,7 @@ class AppContainer extends React.Component {
   }
 
   handleItemClick(i, evt) {
-    this.execute(this.state.results[i]);
+    this.execute(this.state.results[i], evt);
   }
 
   handleKeyboardFocus(evt) {
@@ -340,10 +359,10 @@ class AppContainer extends React.Component {
 
   handleRightButtonClick(result, evt) {
     evt.stopPropagation();
-    const pluginId = result.pluginId;
+    const context = result.context;
     const id = result.id;
     const payload = result.payload;
-    rpc.call('buttonAction', { pluginId, id, payload });
+    rpc.call('buttonAction', { context, id, payload });
   }
 
   parseIconUrl(iconUrl) {

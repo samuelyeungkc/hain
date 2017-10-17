@@ -206,7 +206,7 @@ module.exports = (context) => {
     app.setQuery(`${PREFIX} `);
   }
 
-  function execute(id, payload) {
+  function execute(id, payload, extra) {
     const funcs = {
       'install': () => {
         installPackage(id);

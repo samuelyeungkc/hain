@@ -36,4 +36,8 @@ module.exports = class AutoLauncher {
       });
     });
   }
+  isLaunchedAtLogin() {
+    // This function isn't supported in Windows
+    return false;
+  }
 };

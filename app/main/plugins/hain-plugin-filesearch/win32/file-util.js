@@ -37,36 +37,32 @@ function _realpath(filePath) {
 }
 
 function* readdir(dirPath, recursive, matcher) {
-  const list = [];
+  const matchedPaths = [];
   const pendingDirs = [dirPath];
   const scannedDirs = {};
   while (pendingDirs.length > 0) {
     const dir = pendingDirs.shift();
     const realdir = yield _realpath(dir);
-    let files = [];
 
-    if (scannedDirs[realdir]) {
+    if (scannedDirs[realdir])
       continue;
-    }
     scannedDirs[realdir] = true;
 
     try {
-      files = yield _readdir(realdir);
+      const files = yield _readdir(realdir);
       for (const file of files) {
-        const _path = path.join(realdir, file);
+        const filePath = path.join(realdir, file);
         try {
-          const stat = yield _stat(_path);
-          if (matcher(_path, stat)) {
-            list.push(_path);
-          }
-          if (stat.isDirectory() && recursive) {
-            pendingDirs.push(_path);
-          }
+          const stat = yield _stat(filePath);
+          if (stat.isDirectory() && recursive)
+            pendingDirs.push(filePath);
+          if (matcher(filePath, stat))
+            matchedPaths.push(filePath);
         } catch (e) { }
       }
     } catch (e) { }
   }
-  return list;
+  return matchedPaths;
 }
 
-module.exports = readdir;
+module.exports = { readdir };

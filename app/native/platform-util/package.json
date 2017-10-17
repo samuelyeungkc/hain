@@ -4,8 +4,7 @@
   "description": "utility functions to provide a bridge to Windows API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "node-gyp rebuild"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Heejin Lee",
   "license": "ISC",

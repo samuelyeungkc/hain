@@ -1,9 +1,5 @@
 'use strict';
 
-const co = require('co');
-
-const logger = require('../shared/logger');
-
 const AppService = require('./app/app-service');
 const PrefManager = require('./preferences/pref-manager');
 const WorkerClient = require('./worker/worker-client');
@@ -25,7 +21,7 @@ module.exports = class Server {
     this.workerHandler.initialize();
     return this.appService.initializeAndLaunch()
       .then(() => {
-        this.workerClient.loadWorker();
+        this.workerClient.load();
         this.workerProxy.initialize(this.prefManager.appPref.get());
       });
   }

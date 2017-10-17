@@ -9,6 +9,10 @@ const EventEmitter = require('events');
 const schemaDefaults = require('../../utils/schema-defaults');
 const jsonSchemaEncoder = require('../../utils/json-schema-encoder');
 
+function makeEncryptionKey(id) {
+  return `hain-pass-${id}`;
+}
+
 class PreferencesObject extends EventEmitter {
   constructor(store, id, schema) {
     super();
@@ -19,6 +23,9 @@ class PreferencesObject extends EventEmitter {
 
     this.model = {};
     this._isDirty = false;
+    this.encoderOptions = {
+      encryptionKey: makeEncryptionKey(id)
+    };
 
     this.load();
   }
@@ -29,9 +36,8 @@ class PreferencesObject extends EventEmitter {
     const defaults = schemaDefaults(this.schema);
     if (this.store) {
       const loadedData = this.store.get(this.id);
-      // if (this.encKey)
-      //   loadedData = jsonSchemaEncoder.decode(loadedData, this.schema, this.encoderOptions);
-      this.model = lo_assign({}, defaults, loadedData);
+      const decodedData = jsonSchemaEncoder.decode(loadedData, this.schema, this.encoderOptions);
+      this.model = lo_assign({}, defaults, decodedData);
     } else {
       this.model = lo_assign({}, defaults);
     }
@@ -63,10 +69,8 @@ class PreferencesObject extends EventEmitter {
     if (this._isDirty === false)
       return;
     if (this.store) {
-      const saveData = this.model;
-      // if (this.encKey)
-      //   saveData = jsonSchemaEncoder.encode(this.model, this.schema, this.encoderOptions);
-      this.store.set(this.id, saveData);
+      const encodedData = jsonSchemaEncoder.encode(this.model, this.schema, this.encoderOptions);
+      this.store.set(this.id, encodedData);
     }
     const copy = lo_assign({}, this.model);
     this.emit('update', copy);

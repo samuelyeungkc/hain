@@ -9,6 +9,7 @@
       },
       "default": [
         "${USERPROFILE}\\Desktop",
+        "${USERPROFILE}\\Links",
         "${ProgramData}\\Microsoft\\Windows\\Start Menu\\Programs",
         "${APPDATA}\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar",
         "${APPDATA}\\Microsoft\\Windows\\Start Menu"
@@ -23,6 +24,20 @@
       "default": [
         "${SystemRoot}\\System32",
         "${SystemRoot}"
+      ]
+    },
+    "searchExtensions": {
+      "type": "array",
+      "title": "File extensions to match (requires restart)",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        ".appref-ms",
+        ".exe",
+        ".lnk",
+        ".bat",
+        ".url"
       ]
     }
   }

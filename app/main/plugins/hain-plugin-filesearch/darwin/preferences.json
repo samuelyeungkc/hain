@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "recursiveFolders": {
+      "type": "array",
+      "title": "Folders to search recursively (requires restart)",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "/Applications",
+        "~/Applications",
+        "~/Desktop"
+      ]
+    }
+  }
+}
